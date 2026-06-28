@@ -1,170 +1,113 @@
 # 🥚 EggMan
 
-> Your emotional desktop AI companion.
+> **Your Emotional Desktop AI Companion**
 
-EggMan is a desktop pet built with Python and PySide6 that lives on your screen, chats with you, expresses emotions, remembers interactions, and slowly grows into a unique companion.
+EggMan is an AI-powered desktop companion built with **Python** and **PySide6**. Instead of being just another chatbot, EggMan is designed to live on your desktop, interact naturally, express emotions, remember conversations, and grow alongside you.
+
+The long-term vision is to create an AI companion that feels alive—one that is always present, reacts to your actions, and develops its own personality over time.
 
 ---
 
 ## ✨ Vision
 
-Most AI assistants are tools.
+Most AI assistants exist only when you open them.
 
-EggMan is meant to feel like a friend.
+**EggMan lives on your desktop.**
 
-The goal is to create a small character that exists on your desktop and develops its own personality through conversations and interactions.
+Whether you're coding, studying, gaming, or simply browsing the web, EggMan stays with you—ready to chat, react, remember, and support you throughout your day.
 
----
-
-## Current State
-
-🚧 Early Development
-
-Current version: **v0.0.9**
-
-Implemented:
-
-- Basic PySide6 window
-- Chat interface
-- Egg character
-- Camera button placeholder
-- Message input box
-- UI styling
+The goal is not to replace human interaction, but to create a small companion that makes your computer feel a little more alive.
 
 ---
 
-## Planned Features
+## 🚀 Current Features
+
+* Modern desktop UI built with PySide6
+* Interactive chat interface
+* Clean modular architecture
+* Responsive message input
+* Character panel with future animation support
+* Asset management system
+
+---
+
+## 🛠 Planned Features
+
+### 💬 Intelligent Conversations
+
+* Natural language conversations
+* Context awareness
+* Long-term memory
+* Personalized responses
+* Relationship growth
 
 ### 😊 Emotion System
 
-EggMan will be able to feel:
+EggMan will be able to experience emotions such as:
 
-- Happy
-- Excited
-- Curious
-- Sleepy
-- Sad
-- Angry
-- Embarrassed
-- Lonely
+* Happy
+* Curious
+* Excited
+* Sleepy
+* Sad
+* Angry
+* Embarrassed
+* Lonely
 
-Its appearance and animations will change depending on its emotional state.
+These emotions will influence animations, dialogue, and behavior.
 
----
-
-### 💬 AI Conversation
-
-- Natural conversations
-- Context awareness
-- Personality system
-- Long-term memory
-- Relationship growth
-
----
-
-### 🥚 Character Expressions
-
-- Eye animations
-- Blinking
-- Idle movements
-- Emotional reactions
-- Facial expressions
-
----
-
-### 📸 Vision
-
-- Webcam support
-- Image understanding
-- Object recognition
-- Photo-based conversations
-
----
-
-### 🧠 Memory System
+### 🧠 Memory
 
 EggMan will remember:
 
-- Your name
-- Preferences
-- Past conversations
-- Important events
-- Shared experiences
+* Your name
+* Preferences
+* Previous conversations
+* Important dates
+* Shared experiences
+
+### 🎭 Character Animation
+
+* Idle animations
+* Blinking
+* Eye tracking
+* Emotional expressions
+* Smooth transitions
+
+### 📷 Vision
+
+* Webcam integration
+* Image understanding
+* Object recognition
+* Screenshot analysis
+
+### 🎤 Voice
+
+* Speech recognition
+* Voice responses
+* Natural conversations
+* Wake-word support
+
+### ⚙️ Customization
+
+* Themes
+* Personality presets
+* Animation settings
+* API configuration
+* Desktop behavior
 
 ---
 
-### 🎵 Sounds
-
-- Notifications
-- Reactions
-- Idle sounds
-- Emotional sound effects
-
----
-
-### ⚙️ Settings
-
-- Theme selection
-- Personality modes
-- API configuration
-- Animation settings
-
----
-
-## Future Ideas
-
-- Desktop wandering
-- Notifications
-- Mini games
-- Music integration
-- Calendar reminders
-- Weather awareness
-- Voice conversations
-- Multiple emotions
-- Custom outfits
-- Mood tracking
-
----
-
-## Tech Stack
-
-| Component | Technology |
-|------------|------------|
-| Language | Python |
-| GUI | PySide6 |
-| AI | OpenAI API |
-| Database | SQLite |
-| Memory System | JSON + SQLite |
-| Images | PNG Assets |
-| Sound | pygame |
-| Configuration | dotenv |
-
----
-
-## Folder Structure
+## 📁 Project Structure
 
 ```text
 EggMan/
 │
-├── assets/
-│   ├── faces/
-│   ├── icons/
-│   └── sounds/
-│
-├── docs/
-│
-├── src/
-│   ├── ui/
-│   ├── ai/
-│   ├── emotions/
-│   ├── animations/
-│   ├── memory/
-│   ├── database/
-│   └── core/
-│
-├── tests/
-│
-├── main.py
+├── assets/        # Images, icons, animations, sounds
+├── core/          # Core application logic
+├── ui/            # User interface components
+├── data/          # Memory, configuration and storage
+├── main.py        # Application entry point
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -172,94 +115,70 @@ EggMan/
 
 ---
 
-## Installation
+## 🧰 Tech Stack
 
-Clone the repository:
-
-```bash
-git clone https://github.com/your-username/EggMan.git
-```
-
-Move into the project:
-
-```bash
-cd EggMan
-```
-
-Create a virtual environment:
-
-```bash
-python -m venv venv
-```
-
-Activate it:
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Run:
-
-```bash
-python main.py
-```
+| Technology | Purpose                   |
+| ---------- | ------------------------- |
+| Python     | Main programming language |
+| PySide6    | Desktop GUI               |
+| OpenAI API | AI conversation           |
+| SQLite     | Persistent memory         |
+| JSON       | Configuration             |
+| Pygame     | Audio playback            |
 
 ---
 
-## Roadmap
+## 🎯 Roadmap
 
-### v0.1.0
-- Basic UI
+### Version 0.1
 
-### v0.2.0
-- Character animations
+* Desktop interface
+* Basic chat system
+* Initial project architecture
 
-### v0.3.0
-- Emotion engine
+### Version 0.2
 
-### v0.4.0
-- AI integration
+* Character animations
+* Emotion engine
 
-### v0.5.0
-- Memory system
+### Version 0.3
 
-### v0.6.0
-- Vision support
+* AI conversation
+* Memory system
 
-### v0.7.0
-- Voice interaction
+### Version 0.4
 
-### v1.0.0
-- First stable release
+* Vision support
+* Voice interaction
 
----
+### Version 0.5
 
-## Inspiration
+* Desktop interactions
+* Notifications
+* Companion behaviors
 
-- Desktop Goose
-- Tamagotchi
-- Character AI
-- BonziBuddy
-- Animal Crossing villagers
+### Version 1.0
+
+The first complete version of EggMan featuring a fully interactive emotional AI companion.
 
 ---
 
-## Philosophy
+## 🤝 Contributing
 
-EggMan is not designed to replace human relationships.
+Contributions, suggestions, and ideas are always welcome.
 
-It is designed to make your desktop feel a little less lonely.
+If you'd like to improve EggMan, feel free to open an issue or submit a pull request.
 
 ---
 
-## License
+## 📄 License
 
-MIT License
+This project is licensed under the MIT License.
+
+---
+
+## ❤️ A Small Dream
+
+EggMan isn't meant to be just another AI assistant.
+
+It's an attempt to build something that feels alive—a companion that shares your desktop, remembers your journey, and grows with you one conversation at a time.
