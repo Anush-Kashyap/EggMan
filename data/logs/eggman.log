@@ -2,3 +2,496 @@
 2026-06-28 17:09:56,804 | INFO | Application shutdown
 2026-06-28 17:10:29,341 | INFO | Application startup
 2026-06-28 17:11:01,699 | INFO | Application shutdown
+2026-06-28 17:27:31,739 | INFO | Application services initialized
+2026-06-28 17:28:01,757 | INFO | Application services initialized
+2026-06-28 17:28:01,758 | INFO | Application startup
+2026-06-28 17:28:02,680 | INFO | Application shutdown
+2026-06-28 17:30:47,328 | INFO | Application services initialized
+2026-06-28 17:30:47,329 | INFO | Application startup
+2026-06-28 17:30:48,142 | INFO | Application shutdown
+2026-06-28 17:34:11,418 | INFO | Application services initialized
+2026-06-28 17:34:11,419 | INFO | Application startup
+2026-06-28 17:34:12,440 | INFO | Application shutdown
+2026-06-28 17:34:38,333 | INFO | Application services initialized
+2026-06-28 17:34:38,335 | INFO | Application startup
+2026-06-28 17:34:52,555 | INFO | Application shutdown
+2026-06-28 17:38:18,840 | INFO | Application services initialized
+2026-06-28 17:38:18,842 | INFO | Application startup
+2026-06-28 17:38:19,734 | INFO | Application shutdown
+2026-06-28 17:42:43,991 | INFO | Application services initialized
+2026-06-28 17:42:43,993 | INFO | Application startup
+2026-06-28 17:42:45,769 | INFO | Application shutdown
+2026-06-28 17:51:07,898 | INFO | Application services initialized
+2026-06-28 17:51:07,900 | INFO | Application startup
+2026-06-28 17:51:52,834 | INFO | Application services initialized
+2026-06-28 17:51:52,835 | INFO | Application services initialized
+2026-06-28 17:51:52,836 | INFO | Application startup
+2026-06-28 17:51:52,837 | INFO | Application startup
+2026-06-28 17:51:56,833 | INFO | Application shutdown
+2026-06-28 17:52:07,958 | INFO | Application shutdown
+2026-06-28 18:12:33,903 | INFO | Application services initialized
+2026-06-28 18:12:33,905 | INFO | Application startup
+2026-06-28 18:12:37,921 | INFO | Resolved provider: geminiprovider
+2026-06-28 18:12:37,953 | INFO | AIEngine generating response
+2026-06-28 18:12:53,764 | INFO | Application shutdown
+2026-06-28 18:18:08,664 | INFO | Application services initialized
+2026-06-28 18:18:08,667 | INFO | Application startup
+2026-06-28 18:18:16,210 | INFO | Resolved provider: geminiprovider
+2026-06-28 18:18:16,239 | INFO | AIEngine generating response
+2026-06-28 18:18:19,946 | INFO | Resolved provider: geminiprovider
+2026-06-28 18:18:19,949 | INFO | AIEngine generating response
+2026-06-28 18:18:32,604 | INFO | Application shutdown
+2026-06-28 18:27:18,926 | INFO | Application services initialized
+2026-06-28 18:27:18,928 | INFO | Application startup
+2026-06-28 18:27:24,244 | INFO | Resolved provider: geminiprovider
+2026-06-28 18:27:24,258 | INFO | AIEngine generating response
+2026-06-28 18:28:06,676 | INFO | Application shutdown
+2026-06-28 18:49:16,827 | INFO | Application services initialized
+2026-06-28 18:49:16,829 | INFO | Application startup
+2026-06-28 18:49:20,822 | INFO | Resolved provider: geminiprovider
+2026-06-28 18:49:20,846 | INFO | AIEngine generating response
+2026-06-28 19:19:44,107 | INFO | Application shutdown
+2026-06-28 19:20:04,955 | INFO | Application services initialized
+2026-06-28 19:20:04,956 | INFO | Application startup
+2026-06-28 19:20:08,985 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:20:08,991 | INFO | AIEngine generating response
+2026-06-28 19:20:19,209 | INFO | Application shutdown
+2026-06-28 19:20:55,309 | INFO | Application services initialized
+2026-06-28 19:20:55,311 | INFO | Application startup
+2026-06-28 19:20:59,341 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:20:59,359 | INFO | AIEngine generating response
+2026-06-28 19:21:05,832 | INFO | Application shutdown
+2026-06-28 19:24:17,561 | INFO | Application services initialized
+2026-06-28 19:24:17,563 | INFO | Application startup
+2026-06-28 19:24:24,081 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:24:24,118 | INFO | AIEngine generating response
+2026-06-28 19:24:37,252 | INFO | Application shutdown
+2026-06-28 19:28:03,685 | INFO | Application services initialized
+2026-06-28 19:28:03,687 | INFO | Application startup
+2026-06-28 19:28:10,057 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:28:10,072 | INFO | AIEngine generating response
+2026-06-28 19:28:14,758 | INFO | Application shutdown
+2026-06-28 19:45:12,038 | INFO | Application services initialized
+2026-06-28 19:45:12,040 | INFO | Application startup
+2026-06-28 19:45:18,170 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:45:18,202 | INFO | AIEngine generating response
+2026-06-28 19:45:20,209 | INFO | Application shutdown
+2026-06-28 19:45:26,510 | INFO | Application services initialized
+2026-06-28 19:45:26,511 | INFO | Application startup
+2026-06-28 19:45:30,645 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:45:30,665 | INFO | AIEngine generating response
+2026-06-28 19:45:40,571 | INFO | Application shutdown
+2026-06-28 19:45:45,889 | INFO | Application services initialized
+2026-06-28 19:45:45,890 | INFO | Application startup
+2026-06-28 19:45:49,858 | INFO | Resolved provider: geminiprovider
+2026-06-28 19:45:49,865 | INFO | AIEngine generating response
+2026-06-28 19:46:04,907 | INFO | Application shutdown
+2026-06-28 19:46:58,471 | INFO | Application services initialized
+2026-06-28 19:46:58,473 | INFO | Application startup
+2026-06-28 19:47:11,190 | INFO | Application shutdown
+2026-06-28 20:01:38,855 | INFO | Application services initialized
+2026-06-28 20:01:38,856 | INFO | Application startup
+2026-06-28 20:01:43,043 | DEBUG | UI _on_send entering
+2026-06-28 20:01:43,043 | DEBUG | UI entering _start_typing
+2026-06-28 20:01:43,046 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:01:43,046 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:01:43,047 | DEBUG | AIEngine.generate entering
+2026-06-28 20:01:43,048 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:01:43,048 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:01:43,048 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:01:43,070 | DEBUG | AIEngine._build_request_with_context leaving in 21.6ms history=0 memories=0
+2026-06-28 20:01:43,070 | INFO | AIEngine generating response
+2026-06-28 20:01:43,070 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:01:45,518 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:01:45,520 | DEBUG | GeminiProvider._call_api received 743 bytes in 2449.7ms
+2026-06-28 20:01:45,520 | DEBUG | GeminiProvider.generate leaving in 2449.9ms text_len=166
+2026-06-28 20:01:45,520 | DEBUG | AIEngine.generate provider returned in 2472.1ms successful=True error=None text_len=166
+2026-06-28 20:01:45,520 | DEBUG | ConversationEngine.get_reply completed in 2472.2ms successful=True error=None
+2026-06-28 20:01:45,520 | DEBUG | AI worker received reply in 2473.3ms len=166
+2026-06-28 20:01:45,521 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:01:45,521 | DEBUG | UI entering _finish_typing
+2026-06-28 20:02:05,284 | DEBUG | UI _on_send entering
+2026-06-28 20:02:05,284 | DEBUG | UI entering _start_typing
+2026-06-28 20:02:05,287 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:02:05,287 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:02:05,287 | DEBUG | AIEngine.generate entering
+2026-06-28 20:02:05,287 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:02:05,287 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:02:05,287 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:02:05,292 | DEBUG | AIEngine._build_request_with_context leaving in 3.9ms history=0 memories=0
+2026-06-28 20:02:05,292 | INFO | AIEngine generating response
+2026-06-28 20:02:05,292 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:02:09,196 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:02:09,201 | DEBUG | GeminiProvider._call_api received 1244 bytes in 3908.3ms
+2026-06-28 20:02:09,201 | DEBUG | GeminiProvider.generate leaving in 3908.9ms text_len=654
+2026-06-28 20:02:09,201 | DEBUG | AIEngine.generate provider returned in 3913.4ms successful=True error=None text_len=654
+2026-06-28 20:02:09,202 | DEBUG | ConversationEngine.get_reply completed in 3913.5ms successful=True error=None
+2026-06-28 20:02:09,202 | DEBUG | AI worker received reply in 3913.7ms len=654
+2026-06-28 20:02:09,202 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:02:09,202 | DEBUG | UI entering _finish_typing
+2026-06-28 20:02:52,625 | INFO | Application shutdown
+2026-06-28 20:12:42,989 | INFO | Application services initialized
+2026-06-28 20:12:42,990 | INFO | Application startup
+2026-06-28 20:12:51,350 | DEBUG | UI _on_send entering
+2026-06-28 20:12:51,352 | DEBUG | UI entering _start_typing
+2026-06-28 20:12:51,354 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:12:51,355 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:12:51,356 | DEBUG | AIEngine.generate entering
+2026-06-28 20:12:51,356 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:12:51,356 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:12:51,356 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:12:51,358 | INFO | Memory retrieved count=0 query='so how are u feeling?'
+2026-06-28 20:12:51,358 | INFO | Memory injected into prompt count=0
+2026-06-28 20:12:51,358 | DEBUG | AIEngine._build_request_with_context leaving in 1.6ms history=0 memories=0
+2026-06-28 20:12:51,358 | INFO | AIEngine generating response
+2026-06-28 20:12:51,358 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:12:54,944 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:12:54,947 | DEBUG | GeminiProvider._call_api received 859 bytes in 3588.7ms
+2026-06-28 20:12:54,947 | DEBUG | GeminiProvider.generate leaving in 3589.0ms text_len=280
+2026-06-28 20:12:54,947 | DEBUG | AIEngine.generate provider returned in 3591.1ms successful=True error=None text_len=280
+2026-06-28 20:12:54,948 | DEBUG | ConversationEngine.get_reply completed in 3591.2ms successful=True error=None
+2026-06-28 20:12:54,948 | DEBUG | AI worker received reply in 3592.5ms len=280
+2026-06-28 20:12:54,948 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:12:54,948 | DEBUG | UI entering _finish_typing
+2026-06-28 20:13:04,745 | DEBUG | UI _on_send entering
+2026-06-28 20:13:04,745 | DEBUG | UI entering _start_typing
+2026-06-28 20:13:04,747 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:13:04,747 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:13:04,748 | DEBUG | AIEngine.generate entering
+2026-06-28 20:13:04,748 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:13:04,748 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:13:04,748 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:13:04,749 | INFO | Memory retrieved count=0 query='i like mangos ok'
+2026-06-28 20:13:04,749 | INFO | Memory injected into prompt count=0
+2026-06-28 20:13:04,749 | DEBUG | AIEngine._build_request_with_context leaving in 1.0ms history=0 memories=0
+2026-06-28 20:13:04,749 | INFO | AIEngine generating response
+2026-06-28 20:13:04,749 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:13:04,856 | INFO | Memory stored id=1 key=interest action=created
+2026-06-28 20:13:04,856 | INFO | Memory saved: interest=i like mangos ok
+2026-06-28 20:13:07,118 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:13:07,122 | DEBUG | GeminiProvider._call_api received 740 bytes in 2373.5ms
+2026-06-28 20:13:07,123 | DEBUG | GeminiProvider.generate leaving in 2373.7ms text_len=165
+2026-06-28 20:13:07,123 | DEBUG | AIEngine.generate provider returned in 2375.1ms successful=True error=None text_len=165
+2026-06-28 20:13:07,131 | INFO | Memory stored id=1 key=interest action=updated
+2026-06-28 20:13:07,131 | INFO | Memory extracted after AI response id=1 key=interest
+2026-06-28 20:13:07,131 | DEBUG | ConversationEngine.get_reply completed in 2383.5ms successful=True error=None
+2026-06-28 20:13:07,131 | DEBUG | AI worker received reply in 2383.8ms len=165
+2026-06-28 20:13:07,131 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:13:07,131 | DEBUG | UI entering _finish_typing
+2026-06-28 20:13:12,885 | INFO | Application shutdown
+2026-06-28 20:13:14,633 | INFO | Application services initialized
+2026-06-28 20:13:14,634 | INFO | Application startup
+2026-06-28 20:13:21,120 | DEBUG | UI _on_send entering
+2026-06-28 20:13:21,120 | DEBUG | UI entering _start_typing
+2026-06-28 20:13:21,123 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:13:21,123 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:13:21,124 | DEBUG | AIEngine.generate entering
+2026-06-28 20:13:21,124 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:13:21,124 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:13:21,125 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:13:21,133 | INFO | Memory retrieved count=1 query='what fruit do i like?'
+2026-06-28 20:13:21,133 | INFO | Memory injected into prompt count=1
+2026-06-28 20:13:21,133 | DEBUG | AIEngine._build_request_with_context leaving in 8.0ms history=0 memories=1
+2026-06-28 20:13:21,133 | INFO | AIEngine generating response
+2026-06-28 20:13:21,133 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:13:22,598 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:13:22,600 | DEBUG | GeminiProvider._call_api received 629 bytes in 1467.4ms
+2026-06-28 20:13:22,600 | DEBUG | GeminiProvider.generate leaving in 1467.7ms text_len=55
+2026-06-28 20:13:22,600 | DEBUG | AIEngine.generate provider returned in 1476.2ms successful=True error=None text_len=55
+2026-06-28 20:13:22,600 | DEBUG | ConversationEngine.get_reply completed in 1476.3ms successful=True error=None
+2026-06-28 20:13:22,600 | DEBUG | AI worker received reply in 1477.4ms len=55
+2026-06-28 20:13:22,600 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:13:22,601 | DEBUG | UI entering _finish_typing
+2026-06-28 20:13:45,798 | DEBUG | UI _on_send entering
+2026-06-28 20:13:45,798 | DEBUG | UI entering _start_typing
+2026-06-28 20:13:45,800 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:13:45,800 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:13:45,801 | DEBUG | AIEngine.generate entering
+2026-06-28 20:13:45,801 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:13:45,801 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:13:45,801 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:13:45,811 | INFO | Memory retrieved count=1 query='u remembered nice buddy!!'
+2026-06-28 20:13:45,811 | INFO | Memory injected into prompt count=1
+2026-06-28 20:13:45,811 | DEBUG | AIEngine._build_request_with_context leaving in 9.9ms history=0 memories=1
+2026-06-28 20:13:45,811 | INFO | AIEngine generating response
+2026-06-28 20:13:45,811 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:13:47,848 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:13:47,852 | DEBUG | GeminiProvider._call_api received 725 bytes in 2040.4ms
+2026-06-28 20:13:47,852 | DEBUG | GeminiProvider.generate leaving in 2040.7ms text_len=148
+2026-06-28 20:13:47,852 | DEBUG | AIEngine.generate provider returned in 2051.2ms successful=True error=None text_len=148
+2026-06-28 20:13:47,852 | DEBUG | ConversationEngine.get_reply completed in 2051.2ms successful=True error=None
+2026-06-28 20:13:47,852 | DEBUG | AI worker received reply in 2051.5ms len=148
+2026-06-28 20:13:47,852 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:13:47,853 | DEBUG | UI entering _finish_typing
+2026-06-28 20:14:00,752 | INFO | Application shutdown
+2026-06-28 20:25:43,179 | INFO | Application services initialized
+2026-06-28 20:25:43,180 | INFO | Application startup
+2026-06-28 20:25:47,130 | DEBUG | UI _on_send entering
+2026-06-28 20:25:47,131 | DEBUG | UI entering _start_typing
+2026-06-28 20:25:47,133 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:25:47,134 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:25:47,135 | DEBUG | AIEngine.generate entering
+2026-06-28 20:25:47,135 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:25:47,135 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:25:47,135 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:25:47,143 | INFO | Memory retrieved count=1 query='heey'
+2026-06-28 20:25:47,144 | INFO | Memory injected into prompt count=1
+2026-06-28 20:25:47,144 | DEBUG | AIEngine._build_request_with_context leaving in 9.4ms history=0 memories=1
+2026-06-28 20:25:47,144 | INFO | AIEngine generating response
+2026-06-28 20:25:47,144 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:25:49,591 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:25:49,594 | DEBUG | GeminiProvider._call_api received 686 bytes in 2449.5ms
+2026-06-28 20:25:49,594 | DEBUG | GeminiProvider.generate leaving in 2449.8ms text_len=108
+2026-06-28 20:25:49,594 | DEBUG | AIEngine.generate provider returned in 2459.7ms successful=True error=None text_len=108
+2026-06-28 20:25:49,594 | DEBUG | ConversationEngine.get_reply completed in 2459.8ms successful=True error=None
+2026-06-28 20:25:49,594 | DEBUG | AI worker received reply in 2460.8ms len=108
+2026-06-28 20:25:49,594 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:25:49,595 | DEBUG | UI entering _finish_typing
+2026-06-28 20:25:53,703 | DEBUG | UI _on_send entering
+2026-06-28 20:25:53,703 | DEBUG | UI entering _start_typing
+2026-06-28 20:25:53,707 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:25:53,708 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:25:53,708 | DEBUG | AIEngine.generate entering
+2026-06-28 20:25:53,708 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:25:53,708 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:25:53,708 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:25:53,718 | INFO | Memory retrieved count=1 query='open spotify'
+2026-06-28 20:25:53,718 | INFO | Memory injected into prompt count=1
+2026-06-28 20:25:53,718 | DEBUG | AIEngine._build_request_with_context leaving in 9.0ms history=0 memories=1
+2026-06-28 20:25:53,718 | INFO | AIEngine generating response
+2026-06-28 20:25:53,718 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:25:55,766 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:25:55,771 | DEBUG | GeminiProvider._call_api received 676 bytes in 2053.3ms
+2026-06-28 20:25:55,772 | DEBUG | GeminiProvider.generate leaving in 2053.6ms text_len=100
+2026-06-28 20:25:55,772 | DEBUG | AIEngine.generate provider returned in 2063.1ms successful=True error=None text_len=100
+2026-06-28 20:25:55,772 | DEBUG | ConversationEngine.get_reply completed in 2063.2ms successful=True error=None
+2026-06-28 20:25:55,772 | DEBUG | AI worker received reply in 2063.6ms len=100
+2026-06-28 20:25:55,772 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:25:55,772 | DEBUG | UI entering _finish_typing
+2026-06-28 20:26:09,775 | DEBUG | UI _on_send entering
+2026-06-28 20:26:09,776 | DEBUG | UI entering _start_typing
+2026-06-28 20:26:09,777 | DEBUG | UI starting AI worker thread name=Thread-3 (_fetch_reply)
+2026-06-28 20:26:09,778 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:26:09,778 | DEBUG | AIEngine.generate entering
+2026-06-28 20:26:09,778 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:26:09,778 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:26:09,778 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:26:09,788 | INFO | Memory retrieved count=1 query='open it man'
+2026-06-28 20:26:09,788 | INFO | Memory injected into prompt count=1
+2026-06-28 20:26:09,788 | DEBUG | AIEngine._build_request_with_context leaving in 9.5ms history=0 memories=1
+2026-06-28 20:26:09,788 | INFO | AIEngine generating response
+2026-06-28 20:26:09,788 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:26:13,646 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:26:13,656 | DEBUG | GeminiProvider._call_api received 645 bytes in 3868.8ms
+2026-06-28 20:26:13,656 | DEBUG | GeminiProvider.generate leaving in 3869.0ms text_len=64
+2026-06-28 20:26:13,656 | DEBUG | AIEngine.generate provider returned in 3878.9ms successful=True error=None text_len=64
+2026-06-28 20:26:13,656 | DEBUG | ConversationEngine.get_reply completed in 3879.0ms successful=True error=None
+2026-06-28 20:26:13,657 | DEBUG | AI worker received reply in 3879.2ms len=64
+2026-06-28 20:26:13,657 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:26:13,657 | DEBUG | UI entering _finish_typing
+2026-06-28 20:26:21,415 | DEBUG | UI _on_send entering
+2026-06-28 20:26:21,415 | DEBUG | UI entering _start_typing
+2026-06-28 20:26:21,418 | DEBUG | UI starting AI worker thread name=Thread-4 (_fetch_reply)
+2026-06-28 20:26:21,418 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:26:21,418 | DEBUG | AIEngine.generate entering
+2026-06-28 20:26:21,419 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:26:21,419 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:26:21,419 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:26:21,428 | INFO | Memory retrieved count=1 query='open spotify'
+2026-06-28 20:26:21,428 | INFO | Memory injected into prompt count=1
+2026-06-28 20:26:21,428 | DEBUG | AIEngine._build_request_with_context leaving in 9.6ms history=0 memories=1
+2026-06-28 20:26:21,428 | INFO | AIEngine generating response
+2026-06-28 20:26:21,428 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:26:24,790 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:26:24,793 | DEBUG | GeminiProvider._call_api received 650 bytes in 3364.6ms
+2026-06-28 20:26:24,793 | DEBUG | GeminiProvider.generate leaving in 3364.9ms text_len=72
+2026-06-28 20:26:24,793 | DEBUG | AIEngine.generate provider returned in 3375.0ms successful=True error=None text_len=72
+2026-06-28 20:26:24,793 | DEBUG | ConversationEngine.get_reply completed in 3375.1ms successful=True error=None
+2026-06-28 20:26:24,794 | DEBUG | AI worker received reply in 3375.4ms len=72
+2026-06-28 20:26:24,794 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:26:24,794 | DEBUG | UI entering _finish_typing
+2026-06-28 20:26:41,568 | INFO | Application shutdown
+2026-06-28 20:27:05,848 | INFO | Application services initialized
+2026-06-28 20:27:05,849 | INFO | Application startup
+2026-06-28 20:27:12,516 | DEBUG | UI _on_send entering
+2026-06-28 20:27:12,516 | DEBUG | UI entering _start_typing
+2026-06-28 20:27:12,519 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:27:12,520 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:27:12,520 | DEBUG | AIEngine.generate entering
+2026-06-28 20:27:12,520 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:27:12,520 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:27:12,521 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:27:12,590 | INFO | Memory retrieved count=1 query='say something'
+2026-06-28 20:27:12,591 | INFO | Memory injected into prompt count=1
+2026-06-28 20:27:12,591 | DEBUG | AIEngine._build_request_with_context leaving in 70.4ms history=0 memories=1
+2026-06-28 20:27:12,591 | INFO | AIEngine generating response
+2026-06-28 20:27:12,591 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:27:15,689 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:27:15,691 | DEBUG | GeminiProvider._call_api received 701 bytes in 3100.0ms
+2026-06-28 20:27:15,691 | DEBUG | GeminiProvider.generate leaving in 3100.2ms text_len=126
+2026-06-28 20:27:15,691 | DEBUG | AIEngine.generate provider returned in 3171.1ms successful=True error=None text_len=126
+2026-06-28 20:27:15,691 | DEBUG | ConversationEngine.get_reply completed in 3171.2ms successful=True error=None
+2026-06-28 20:27:15,691 | DEBUG | AI worker received reply in 3172.2ms len=126
+2026-06-28 20:27:15,691 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:27:15,692 | DEBUG | UI entering _finish_typing
+2026-06-28 20:27:31,744 | DEBUG | UI _on_send entering
+2026-06-28 20:27:31,744 | DEBUG | UI entering _start_typing
+2026-06-28 20:27:31,746 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:27:31,746 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:27:31,746 | DEBUG | AIEngine.generate entering
+2026-06-28 20:27:31,747 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:27:31,747 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:27:31,747 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:27:31,757 | INFO | Memory retrieved count=1 query='copy whatever u told right now'
+2026-06-28 20:27:31,757 | INFO | Memory injected into prompt count=1
+2026-06-28 20:27:31,757 | DEBUG | AIEngine._build_request_with_context leaving in 10.2ms history=0 memories=1
+2026-06-28 20:27:31,757 | INFO | AIEngine generating response
+2026-06-28 20:27:31,757 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:27:33,615 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:27:33,618 | DEBUG | GeminiProvider._call_api received 668 bytes in 1861.2ms
+2026-06-28 20:27:33,619 | DEBUG | GeminiProvider.generate leaving in 1861.5ms text_len=92
+2026-06-28 20:27:33,619 | DEBUG | AIEngine.generate provider returned in 1872.3ms successful=True error=None text_len=92
+2026-06-28 20:27:33,619 | DEBUG | ConversationEngine.get_reply completed in 1872.5ms successful=True error=None
+2026-06-28 20:27:33,619 | DEBUG | AI worker received reply in 1872.7ms len=92
+2026-06-28 20:27:33,619 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:27:33,619 | DEBUG | UI entering _finish_typing
+2026-06-28 20:27:52,486 | DEBUG | UI _on_send entering
+2026-06-28 20:27:52,486 | DEBUG | UI entering _start_typing
+2026-06-28 20:27:52,489 | DEBUG | UI starting AI worker thread name=Thread-3 (_fetch_reply)
+2026-06-28 20:27:52,489 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:27:52,489 | DEBUG | AIEngine.generate entering
+2026-06-28 20:27:52,489 | DEBUG | AIEngine._resolve_provider entering active=gemini available=['local', 'gemini']
+2026-06-28 20:27:52,489 | INFO | Resolved provider: geminiprovider
+2026-06-28 20:27:52,489 | DEBUG | AIEngine._build_request_with_context entering
+2026-06-28 20:27:52,499 | INFO | Memory retrieved count=1 query='copy what u told rightnow to clipboard'
+2026-06-28 20:27:52,499 | INFO | Memory injected into prompt count=1
+2026-06-28 20:27:52,499 | DEBUG | AIEngine._build_request_with_context leaving in 8.7ms history=0 memories=1
+2026-06-28 20:27:52,499 | INFO | AIEngine generating response
+2026-06-28 20:27:52,499 | DEBUG | GeminiProvider.generate entering endpoint=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent model=gemini-2.5-flash api_key_present=True
+2026-06-28 20:27:54,938 | DEBUG | Gemini API HTTP status=200
+2026-06-28 20:27:54,941 | DEBUG | GeminiProvider._call_api received 1080 bytes in 2441.8ms
+2026-06-28 20:27:54,941 | DEBUG | GeminiProvider.generate leaving in 2442.2ms text_len=494
+2026-06-28 20:27:54,941 | DEBUG | AIEngine.generate provider returned in 2451.4ms successful=True error=None text_len=494
+2026-06-28 20:27:54,941 | DEBUG | ConversationEngine.get_reply completed in 2451.6ms successful=True error=None
+2026-06-28 20:27:54,942 | DEBUG | AI worker received reply in 2451.9ms len=494
+2026-06-28 20:27:54,942 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:27:54,942 | DEBUG | UI entering _finish_typing
+2026-06-28 20:28:00,618 | INFO | Application shutdown
+2026-06-28 20:39:03,950 | INFO | Application services initialized
+2026-06-28 20:39:03,952 | INFO | Application startup
+2026-06-28 20:39:04,081 | INFO | Application shutdown
+2026-06-28 20:41:23,703 | INFO | Application services initialized
+2026-06-28 20:41:23,705 | INFO | Application startup
+2026-06-28 20:41:32,225 | DEBUG | UI _on_send entering
+2026-06-28 20:41:32,225 | DEBUG | UI entering _start_typing
+2026-06-28 20:41:32,227 | DEBUG | UI starting AI worker thread name=Thread-1 (_fetch_reply)
+2026-06-28 20:41:32,228 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:41:32,229 | DEBUG | AIEngine.generate entering
+2026-06-28 20:41:32,229 | INFO | ToolRouter matched tool=app_launcher args=('spotify',)
+2026-06-28 20:41:32,229 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:41:32,273 | INFO | Tool execution completed name=app_launcher success=True
+2026-06-28 20:41:32,273 | INFO | ToolRouter handled tool=app_launcher success=True response='✓ Opening Spotify...'
+2026-06-28 20:41:32,274 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:41:32,274 | DEBUG | ConversationEngine.get_reply completed in 45.1ms successful=True error=None
+2026-06-28 20:41:32,274 | DEBUG | AI worker received reply in 46.0ms len=20
+2026-06-28 20:41:32,274 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:41:32,274 | DEBUG | UI entering _finish_typing
+2026-06-28 20:42:59,088 | DEBUG | UI _on_send entering
+2026-06-28 20:42:59,088 | DEBUG | UI entering _start_typing
+2026-06-28 20:42:59,091 | DEBUG | UI starting AI worker thread name=Thread-2 (_fetch_reply)
+2026-06-28 20:42:59,091 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:42:59,092 | DEBUG | AIEngine.generate entering
+2026-06-28 20:42:59,092 | INFO | ToolRouter matched tool=app_launcher args=('newtabofbrave',)
+2026-06-28 20:42:59,092 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:42:59,092 | ERROR | Tool execution failed name=app_launcher error=Unknown application: newtabofbrave. Registered applications: chrome, notepad, spotify, vscode
+Traceback (most recent call last):
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\tool_manager.py", line 28, in execute
+    result = tool.execute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\builtins.py", line 165, in execute
+    raise ValueError(
+ValueError: Unknown application: newtabofbrave. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:42:59,094 | INFO | ToolRouter handled tool=app_launcher success=False error=Unknown application: newtabofbrave. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:42:59,094 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:42:59,094 | DEBUG | ConversationEngine.get_reply completed in 2.8ms successful=True error=None
+2026-06-28 20:42:59,094 | DEBUG | AI worker received reply in 3.1ms len=119
+2026-06-28 20:42:59,094 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:42:59,099 | DEBUG | UI entering _finish_typing
+2026-06-28 20:43:03,427 | DEBUG | UI _on_send entering
+2026-06-28 20:43:03,427 | DEBUG | UI entering _start_typing
+2026-06-28 20:43:03,429 | DEBUG | UI starting AI worker thread name=Thread-3 (_fetch_reply)
+2026-06-28 20:43:03,430 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:43:03,430 | DEBUG | AIEngine.generate entering
+2026-06-28 20:43:03,430 | INFO | ToolRouter matched tool=app_launcher args=('brave',)
+2026-06-28 20:43:03,431 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:43:03,431 | ERROR | Tool execution failed name=app_launcher error=Unknown application: brave. Registered applications: chrome, notepad, spotify, vscode
+Traceback (most recent call last):
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\tool_manager.py", line 28, in execute
+    result = tool.execute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\builtins.py", line 165, in execute
+    raise ValueError(
+ValueError: Unknown application: brave. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:03,431 | INFO | ToolRouter handled tool=app_launcher success=False error=Unknown application: brave. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:03,432 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:43:03,432 | DEBUG | ConversationEngine.get_reply completed in 1.3ms successful=True error=None
+2026-06-28 20:43:03,432 | DEBUG | AI worker received reply in 1.7ms len=111
+2026-06-28 20:43:03,432 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:43:03,437 | DEBUG | UI entering _finish_typing
+2026-06-28 20:43:15,820 | DEBUG | UI _on_send entering
+2026-06-28 20:43:15,820 | DEBUG | UI entering _start_typing
+2026-06-28 20:43:15,823 | DEBUG | UI starting AI worker thread name=Thread-4 (_fetch_reply)
+2026-06-28 20:43:15,823 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:43:15,824 | DEBUG | AIEngine.generate entering
+2026-06-28 20:43:15,824 | INFO | ToolRouter matched tool=app_launcher args=('bravebrowser',)
+2026-06-28 20:43:15,824 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:43:15,824 | ERROR | Tool execution failed name=app_launcher error=Unknown application: bravebrowser. Registered applications: chrome, notepad, spotify, vscode
+Traceback (most recent call last):
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\tool_manager.py", line 28, in execute
+    result = tool.execute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\builtins.py", line 165, in execute
+    raise ValueError(
+ValueError: Unknown application: bravebrowser. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:15,824 | INFO | ToolRouter handled tool=app_launcher success=False error=Unknown application: bravebrowser. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:15,825 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:43:15,825 | DEBUG | ConversationEngine.get_reply completed in 1.2ms successful=True error=None
+2026-06-28 20:43:15,825 | DEBUG | AI worker received reply in 1.6ms len=118
+2026-06-28 20:43:15,826 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:43:15,830 | DEBUG | UI entering _finish_typing
+2026-06-28 20:43:24,284 | DEBUG | UI _on_send entering
+2026-06-28 20:43:24,284 | DEBUG | UI entering _start_typing
+2026-06-28 20:43:24,286 | DEBUG | UI starting AI worker thread name=Thread-5 (_fetch_reply)
+2026-06-28 20:43:24,287 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:43:24,287 | DEBUG | AIEngine.generate entering
+2026-06-28 20:43:24,287 | INFO | ToolRouter matched tool=app_launcher args=('capcut',)
+2026-06-28 20:43:24,287 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:43:24,287 | ERROR | Tool execution failed name=app_launcher error=Unknown application: capcut. Registered applications: chrome, notepad, spotify, vscode
+Traceback (most recent call last):
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\tool_manager.py", line 28, in execute
+    result = tool.execute(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\anush\OneDrive\Desktop\Eggman\backend\tools\builtins.py", line 165, in execute
+    raise ValueError(
+ValueError: Unknown application: capcut. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:24,288 | INFO | ToolRouter handled tool=app_launcher success=False error=Unknown application: capcut. Registered applications: chrome, notepad, spotify, vscode
+2026-06-28 20:43:24,288 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:43:24,288 | DEBUG | ConversationEngine.get_reply completed in 1.0ms successful=True error=None
+2026-06-28 20:43:24,288 | DEBUG | AI worker received reply in 1.3ms len=112
+2026-06-28 20:43:24,288 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:43:24,293 | DEBUG | UI entering _finish_typing
+2026-06-28 20:43:39,483 | DEBUG | UI _on_send entering
+2026-06-28 20:43:39,483 | DEBUG | UI entering _start_typing
+2026-06-28 20:43:39,485 | DEBUG | UI starting AI worker thread name=Thread-6 (_fetch_reply)
+2026-06-28 20:43:39,485 | DEBUG | AI worker entering _fetch_reply
+2026-06-28 20:43:39,486 | DEBUG | AIEngine.generate entering
+2026-06-28 20:43:39,486 | INFO | ToolRouter matched tool=app_launcher args=('chrome',)
+2026-06-28 20:43:39,486 | INFO | Tool execution started name=app_launcher
+2026-06-28 20:43:39,503 | INFO | Tool execution completed name=app_launcher success=True
+2026-06-28 20:43:39,503 | INFO | ToolRouter handled tool=app_launcher success=True response='✓ Opening Chrome...'
+2026-06-28 20:43:39,503 | INFO | AIEngine short-circuited request with tool=app_launcher
+2026-06-28 20:43:39,503 | DEBUG | ConversationEngine.get_reply completed in 17.0ms successful=True error=None
+2026-06-28 20:43:39,503 | DEBUG | AI worker received reply in 17.2ms len=19
+2026-06-28 20:43:39,503 | DEBUG | AI worker emitting reply_ready
+2026-06-28 20:43:39,503 | DEBUG | UI entering _finish_typing
+2026-06-28 20:43:49,659 | INFO | Application shutdown

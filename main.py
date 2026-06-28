@@ -1,37 +1,55 @@
 import os
 import sys
+import ctypes
 from datetime import datetime
+from pathlib import Path
+from threading import Thread
+from time import perf_counter
+import traceback
 
-from PySide6.QtCore import Qt, QTimer
+PROJECT_ROOT = Path(__file__).resolve().parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
 
-from core.commands import CommandHandler, CommandResult
-from core.config import ConfigManager
-from core.conversation import ConversationEngine
-from core.logger import AppLogger
-from core.paths import EXPORTS_DIR as EXPORTS_FOLDER, SCREENSHOTS_DIR as SCREENSHOTS_FOLDER
-from core.providers import LocalProvider
-from core.settings import SettingsManager
+from app.container import AppContainer
+from core.commands import CommandResult
+from core.paths import APP_ICON_PATH, EXPORTS_DIR as EXPORTS_FOLDER, SCREENSHOTS_DIR as SCREENSHOTS_FOLDER
 from core.themes import Theme, ThemeManager
 from ui.dialogs import SettingsDialog
 from ui.widgets import ChatDisplay, InputBar, TitleBar
 
+APP_NAME = "EggMan"
+APP_VERSION = "0.1.9"
+APP_ORGANIZATION = "EggMan"
+WINDOW_TITLE = APP_NAME
+WINDOWS_APP_ID = f"{APP_ORGANIZATION}.{APP_NAME}.{APP_VERSION}"
+
 
 class EggManWindow(QWidget):
+    _reply_ready = Signal(str, str)
+
     TYPING_DELAY_MS = 1000
     SCREENSHOT_DIR = SCREENSHOTS_FOLDER
     EXPORTS_DIR = EXPORTS_FOLDER
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("EggMan")
+        self.setWindowTitle(WINDOW_TITLE)
+        self._apply_window_icon()
 
-        self._config = ConfigManager()
-        self._logger = AppLogger()
-        self._settings = SettingsManager()
-        self._cmd = CommandHandler()
-        self._provider = self._build_provider()
-        self._conv = ConversationEngine(provider=self._provider)
+        self._services = AppContainer()
+        self._config = self._services.config_manager
+        self._logger = self._services.logger
+        self._settings = self._services.settings_manager
+        self._cmd = self._services.command_handler
+        self._provider = self._services.provider
+        self._conv = self._services.conversation_engine
+        self._memory_manager = self._services.memory_manager
+        self._memory_extractor = self._services.memory_extractor
         self._theme_mgr = ThemeManager(on_theme_changed=self.apply_theme)
 
         self._pending_reply: str = ""
@@ -64,11 +82,10 @@ class EggManWindow(QWidget):
         self._connect_signals()
         self._post_welcome()
 
-    def _build_provider(self):
-        provider_name = str(self._config.get("provider", "local")).strip().lower()
-        if provider_name != "local":
-            return LocalProvider()
-        return LocalProvider()
+    def _apply_window_icon(self):
+        icon = QIcon(str(APP_ICON_PATH))
+        if not icon.isNull():
+            self.setWindowIcon(icon)
 
     def _apply_window_flags(self):
         flags = Qt.FramelessWindowHint
@@ -124,6 +141,7 @@ class EggManWindow(QWidget):
         self._input_bar.send_btn.clicked.connect(self._on_send)
         self._input_bar.entry.returnPressed.connect(self._on_send)
         self._input_bar.screenshot_btn.clicked.connect(self._take_screenshot)
+        self._reply_ready.connect(self._finish_typing)
 
     def apply_theme(self):
         self._update_container_style()
@@ -145,17 +163,40 @@ class EggManWindow(QWidget):
         self._chat.append_message("user", text, self._now())
 
         try:
+            self._logger.debug("UI _on_send entering")
             result = self._cmd.handle(text)
             if result.handled:
                 self._handle_command(result)
                 return
 
-            self._pending_reply = self._conv.get_reply(text)
-            self._pending_ts = self._now()
+            # Run AI request in background thread to avoid UI blocking
             self._start_typing()
+            self._pending_ts = self._now()
+            thread = Thread(target=self._fetch_reply, args=(text, self._pending_ts), daemon=True)
+            self._logger.debug(f"UI starting AI worker thread name={thread.name}")
+            thread.start()
+            self._capture_memory(text)
         except Exception as exc:
-            self._logger.error(f"Message handling failed: {exc}")
+            self._logger.error(f"Message handling failed: {exc}\n{traceback.format_exc()}")
             self._chat.append_message("egg", "Something went wrong. Please try again.", self._now())
+
+    def _fetch_reply(self, user_message: str, timestamp: str):
+        """Fetch AI reply in background thread to avoid UI blocking."""
+        start = perf_counter()
+        self._logger.debug("AI worker entering _fetch_reply")
+        try:
+            reply = self._conv.get_reply(user_message)
+            self._logger.debug(
+                "AI worker received reply in %.1fms len=%d",
+                (perf_counter() - start) * 1000,
+                len(str(reply)),
+            )
+        except Exception as exc:
+            self._logger.error(f"AI response failed: {exc}\n{traceback.format_exc()}")
+            reply = "Sorry, I'm having trouble thinking right now."
+
+        self._logger.debug("AI worker emitting reply_ready")
+        self._reply_ready.emit(str(reply), timestamp)
 
     def _handle_command(self, result: CommandResult):
         if result.action == "clear":
@@ -185,16 +226,28 @@ class EggManWindow(QWidget):
             self._chat.append_message("egg", result.response, self._now())
 
     def _start_typing(self):
+        self._logger.debug("UI entering _start_typing")
         self._set_input_enabled(False)
         self._chat.append_message("egg", "...", self._now())
-        QTimer.singleShot(self._typing_delay_ms, self._finish_typing)
 
-    def _finish_typing(self):
-        self._chat.replace_last_bubble("egg", self._pending_reply, self._pending_ts)
+    @Slot(str, str)
+    def _finish_typing(self, reply: str, timestamp: str):
+        self._logger.debug("UI entering _finish_typing")
+        reply = str(reply) if reply else "..."
+        self._chat.replace_last_bubble("egg", reply, timestamp)
         self._pending_reply = ""
         self._pending_ts = ""
         self._set_input_enabled(True)
         self._input_bar.entry.setFocus()
+
+    def _capture_memory(self, user_message: str) -> None:
+        try:
+            memory = self._memory_extractor.extract(user_message)
+            if memory is not None:
+                self._memory_manager.save_memory(memory)
+                self._logger.info(f"Memory saved: {memory.key}={memory.value}")
+        except Exception as exc:
+            self._logger.error(f"Memory extraction failed: {exc}\n{traceback.format_exc()}")
 
     def _set_input_enabled(self, enabled: bool):
         self._input_bar.entry.setEnabled(enabled)
@@ -261,12 +314,37 @@ class EggManWindow(QWidget):
         super().closeEvent(event)
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
+def _set_windows_app_id() -> None:
+    if sys.platform != "win32":
+        return
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID)
+    except Exception:
+        return
+
+
+def create_application(argv: list[str]) -> QApplication:
+    _set_windows_app_id()
+    QApplication.setApplicationName(APP_NAME)
+    QApplication.setApplicationVersion(APP_VERSION)
+    QApplication.setOrganizationName(APP_ORGANIZATION)
+
+    app = QApplication(argv)
     app.setStyle("Fusion")
     app.setQuitOnLastWindowClosed(True)
+    icon = QIcon(str(APP_ICON_PATH))
+    if not icon.isNull():
+        app.setWindowIcon(icon)
+    return app
 
+
+def main() -> int:
+    app = create_application(sys.argv)
     window = EggManWindow()
     window.show()
+    window._logger.info("Qt application entering event loop")
+    return app.exec()
 
-    sys.exit(app.exec())
+
+if __name__ == "__main__":
+    sys.exit(main())

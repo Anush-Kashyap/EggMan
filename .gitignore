@@ -1,18 +1,40 @@
 # Virtual environment
 .venv/
-
 # Python cache
 __pycache__/
 *.pyc
-
 # VS Code settings
 .vscode/
-
 # Environment variables
 .env
-
 # OS files
 .DS_Store
 Thumbs.db
-screenshots/
-Parking_sight/
+.screenshots/
+.data/logs/
+.build/
+.dist/
+*.pyz
+# SQLite databases
+*.sqlite3
+# Log files
+*.log
+# Coverage reports
+.coverage
+htmlcov/
+# Testing
+.pytest_cache/
+# Linting
+.flake8_cache/
+# Terraform
+.terraform/
+# IDEs
+.idea/
+.project
+.pydevproject
+.Trashes
+# Build tools
+.eggs
+.cache
+.tox
+.mypy_cache
