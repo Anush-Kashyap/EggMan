@@ -151,7 +151,7 @@ class ChatDisplay(QScrollArea):
 
         self._inner = QWidget()
         self._layout = QVBoxLayout(self._inner)
-        self._layout.setContentsMargins(0, 8, 0, 8)
+        self._layout.setContentsMargins(10, 8, 10, 16)
         self._layout.setSpacing(4)
 
         self._empty_label = QLabel(Theme.EMPTY_STATE_MSG)
@@ -170,8 +170,8 @@ class ChatDisplay(QScrollArea):
 
     def apply_theme(self):
         self.setStyleSheet(f"""
-            QScrollArea {{ background: {Theme.CREAM}; border: none; }}
-            QScrollBar:vertical {{ width: 6px; background: {Theme.CREAM}; }}
+            QScrollArea {{ background: transparent; border: none; }}
+            QScrollBar:vertical {{ width: 6px; background: transparent; }}
             QScrollBar::handle:vertical {{
                 background: {Theme.BORDER}; border-radius: 3px; min-height: 20px;
             }}
@@ -179,7 +179,7 @@ class ChatDisplay(QScrollArea):
                 height: 0px;
             }}
         """)
-        self._inner.setStyleSheet(f"background: {Theme.CREAM};")
+        self._inner.setStyleSheet("background: transparent;")
         self._empty_label.setStyleSheet(
             f"color: {Theme.TEXT_FAINT}; background: transparent;"
         )
@@ -259,8 +259,8 @@ class ChatDisplay(QScrollArea):
 
 
 class InputBar(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
         self.setFixedHeight(54)
         self._build_ui()
 
@@ -277,7 +277,7 @@ class InputBar(QWidget):
 
         self.send_btn = self._make_icon_btn("➤")
         self.mic_btn = self._make_icon_btn("🎤")
-        self.screenshot_btn = self._make_icon_btn("⊡")
+        self.screenshot_btn = self._make_icon_btn("📷")
         layout.addWidget(self.mic_btn)
         layout.addWidget(self.send_btn)
         layout.addWidget(self.screenshot_btn)
@@ -295,7 +295,7 @@ class InputBar(QWidget):
         return btn
 
     def apply_theme(self):
-        self.setStyleSheet(f"background: {Theme.CREAM_DARK};")
+        self.setStyleSheet("background: transparent;")
         self.entry.setStyleSheet(f"""
             QLineEdit {{
                 background: {Theme.INPUT_BG}; color: {Theme.TEXT_DARK};

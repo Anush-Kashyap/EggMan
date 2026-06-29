@@ -11,9 +11,9 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from PySide6.QtCore import Qt, Signal, Slot, QTimer
+from PySide6.QtCore import Qt, Signal, Slot, QTimer, QPropertyAnimation
 from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget, QGraphicsOpacityEffect
 
 from app.container import AppContainer
 from core.commands import CommandResult
@@ -30,11 +30,15 @@ WINDOW_TITLE = APP_NAME
 WINDOWS_APP_ID = f"{APP_ORGANIZATION}.{APP_NAME}.{APP_VERSION}"
 
 
-class EggManWindow(QWidget):
+class ChatWindow(QWidget):
     _reply_ready = Signal(str, str)
     _voice_text_ready = Signal(str)
     _voice_error = Signal(str)
     _voice_state_changed = Signal(str)
+    
+    generation_started = Signal()
+    generation_finished = Signal()
+    chat_closed = Signal()
 
     TYPING_DELAY_MS = 1000
     SCREENSHOT_DIR = SCREENSHOTS_FOLDER
@@ -42,6 +46,7 @@ class EggManWindow(QWidget):
 
     def __init__(self, services: AppContainer = None):
         super().__init__()
+        self._is_shutting_down = False
         self.setWindowTitle(WINDOW_TITLE)
         self._apply_window_icon()
 
@@ -120,7 +125,7 @@ class EggManWindow(QWidget):
         )
         self._title_bar = TitleBar(self)
         self._chat = ChatDisplay()
-        self._input_bar = InputBar()
+        self._input_bar = None
 
         root_layout = QVBoxLayout(self._container)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -128,7 +133,6 @@ class EggManWindow(QWidget):
         root_layout.addWidget(self._title_bar)
         root_layout.addWidget(self._make_divider())
         root_layout.addWidget(self._chat, stretch=1)
-        root_layout.addWidget(self._input_bar)
 
         self._update_container_style()
 
@@ -168,14 +172,17 @@ class EggManWindow(QWidget):
         self._voice_error.emit(message)
 
     def _connect_signals(self):
-        self._input_bar.send_btn.clicked.connect(self._on_send)
-        self._input_bar.entry.returnPressed.connect(self._on_send)
-        self._input_bar.mic_btn.clicked.connect(self._on_mic_toggle)
-        self._input_bar.screenshot_btn.clicked.connect(self._take_screenshot)
         self._reply_ready.connect(self._finish_typing)
         self._voice_text_ready.connect(self._on_voice_text)
         self._voice_error.connect(self._on_voice_error)
         self._voice_state_changed.connect(self._on_voice_state_changed)
+
+    def setup_input_connections(self):
+        if self._input_bar:
+            self._input_bar.send_btn.clicked.connect(self._on_send)
+            self._input_bar.entry.returnPressed.connect(self._on_send)
+            self._input_bar.mic_btn.clicked.connect(self._on_mic_toggle)
+            self._input_bar.screenshot_btn.clicked.connect(self._take_screenshot)
 
     def apply_theme(self):
         self._update_container_style()
@@ -183,7 +190,8 @@ class EggManWindow(QWidget):
             return
         self._title_bar.apply_theme()
         self._chat.apply_theme()
-        self._input_bar.apply_theme()
+        if self._input_bar is not None:
+            self._input_bar.apply_theme()
         if hasattr(self, "_help_window") and self._help_window is not None:
             self._help_window.apply_theme()
 
@@ -324,6 +332,7 @@ class EggManWindow(QWidget):
         self._logger.debug("UI entering _start_typing")
         self._set_input_enabled(False)
         self._chat.append_message("egg", "...", self._now())
+        self.generation_started.emit()
 
     @Slot(str, str)
     def _finish_typing(self, reply: str, timestamp: str):
@@ -334,6 +343,12 @@ class EggManWindow(QWidget):
         self._pending_ts = ""
         self._set_input_enabled(True)
         self._input_bar.entry.setFocus()
+        
+        # Render the reply in the companion speech bubble
+        if hasattr(self, "_companion") and self._companion is not None:
+            self._companion.display_reply(reply)
+
+        self.generation_finished.emit()
 
     def _capture_memory(self, user_message: str) -> None:
         try:
@@ -453,13 +468,46 @@ class EggManWindow(QWidget):
         self._config.set("always_on_top", bool(self._settings.get("always_on_top")))
         self._config.set("typing_delay", self._typing_delay_ms)
         self._config.save()
-        self._voice.stop()
-        if hasattr(self._services, "wake_word_service"):
-            self._services.wake_word_service.stop()
-        if hasattr(self, "_help_window") and self._help_window is not None:
-            self._help_window.close()
-        self._logger.info("Application shutdown")
-        super().closeEvent(event)
+        
+        if getattr(self, "_is_shutting_down", False):
+            self._voice.stop()
+            if hasattr(self._services, "wake_word_service"):
+                self._services.wake_word_service.stop()
+            if hasattr(self, "_help_window") and self._help_window is not None:
+                self._help_window.close()
+            self._logger.info("ChatWindow shutdown")
+            event.accept()
+        else:
+            event.ignore()
+            self.fade_out()
+            self.chat_closed.emit()
+
+    def fade_in(self):
+        if not hasattr(self, "_opacity_effect"):
+            self._opacity_effect = QGraphicsOpacityEffect(self)
+            self.setGraphicsEffect(self._opacity_effect)
+            
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        
+        self._fade_anim = QPropertyAnimation(self._opacity_effect, b"opacity")
+        self._fade_anim.setDuration(250)
+        self._fade_anim.setStartValue(0.0)
+        self._fade_anim.setEndValue(1.0)
+        self._fade_anim.start()
+
+    def fade_out(self):
+        if not hasattr(self, "_opacity_effect"):
+            self._opacity_effect = QGraphicsOpacityEffect(self)
+            self.setGraphicsEffect(self._opacity_effect)
+            
+        self._fade_anim = QPropertyAnimation(self._opacity_effect, b"opacity")
+        self._fade_anim.setDuration(250)
+        self._fade_anim.setStartValue(1.0)
+        self._fade_anim.setEndValue(0.0)
+        self._fade_anim.finished.connect(self.hide)
+        self._fade_anim.start()
 
 
 def _set_windows_app_id() -> None:
@@ -489,36 +537,33 @@ def create_application(argv: list[str]) -> QApplication:
 def main() -> int:
     app = create_application(sys.argv)
     
-    # 1. Create and show loading screen
-    from ui.loading import LoadingScreen, AppInitWorker
-    loading_screen = LoadingScreen()
-    loading_screen.show()
+    # Initialize the application services synchronously
+    from app.container import AppContainer
+    try:
+        result = AppContainer()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
-    # 2. Start initialization in a background worker thread
-    worker = AppInitWorker()
+    # Create chat window with pre-initialized services
+    chat_window = ChatWindow(services=result)
+    
+    # Create companion and set reference
+    from ui.companion import DesktopCompanion
+    companion = DesktopCompanion(chat_window)
+    chat_window._companion = companion
+    chat_window._input_bar = companion.input_bar
+    chat_window.setup_input_connections()
+    
+    # Connect status and generation signals
+    chat_window.generation_started.connect(companion._on_generation_started)
+    chat_window.generation_finished.connect(companion._on_generation_finished)
+    chat_window.chat_closed.connect(lambda: companion.set_egg_state("inactive"))
 
-    # Placeholders to hold window reference
-    window = None
-
-    def on_init_finished(result):
-        nonlocal window
-        if isinstance(result, Exception):
-            import traceback
-            traceback.print_exception(type(result), result, result.__traceback__)
-            sys.exit(1)
-        else:
-            # 3. Create main window with pre-initialized services
-            window = EggManWindow(services=result)
-            # 4. Smooth transition: close loading and show main window
-            loading_screen.close()
-            window.show()
-            window._logger.info("Main window initialized and shown after loading")
-
-    worker.finished.connect(on_init_finished)
-    worker.start()
-
-    # Keep a reference to the worker on the app object to prevent garbage collection
-    app.worker = worker
+    # Show companion window
+    companion.show()
+    chat_window._logger.info("Desktop companion initialized and shown on startup")
 
     return app.exec()
 
