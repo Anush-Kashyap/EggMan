@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from core.themes import ThemeManager
 
 
@@ -11,23 +9,6 @@ class CommandResult:
 
 
 class CommandHandler:
-    HELP_TEXT = (
-        "Available commands:\n"
-        "  /help       — show this message\n"
-        "  /clear      — clear chat history\n"
-        "  /about      — about EggMan\n"
-        "  /time       — current time\n"
-        "  /export     — export chat to file\n"
-        "  /settings   — open settings window\n"
-        "  /theme light|dark  — switch theme"
-    )
-
-    ABOUT_TEXT = (
-        "EggMan v0.1.9 🥚\n"
-        "A soft desktop companion.\n"
-        "Built with PySide6."
-    )
-
     def handle(self, text: str) -> CommandResult:
         if not text.startswith("/"):
             return CommandResult(handled=False)
@@ -37,17 +18,10 @@ class CommandHandler:
         args = parts[1:]
 
         if cmd == "/help":
-            return CommandResult(handled=True, response=self.HELP_TEXT)
+            return CommandResult(handled=True, action="help")
 
         if cmd == "/clear":
             return CommandResult(handled=True, action="clear")
-
-        if cmd == "/about":
-            return CommandResult(handled=True, response=self.ABOUT_TEXT)
-
-        if cmd == "/time":
-            now = datetime.now().strftime("%H:%M:%S on %A, %d %B %Y")
-            return CommandResult(handled=True, response=f"It is {now}.")
 
         if cmd == "/export":
             return CommandResult(handled=True, action="export")

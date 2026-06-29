@@ -1,19 +1,25 @@
+from PySide6.QtCore import Qt, Signal, QTimer
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QDialogButtonBox,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
+    QWidget,
 )
 
 from backend.ai.ollama_provider import OllamaProvider
 from core.config import ConfigManager
 from core.settings import SettingsManager
+from core.themes import Theme, ThemeManager
+from ui.widgets import TitleBar
 
 
 class SettingsDialog(QDialog):
@@ -137,3 +143,198 @@ class SettingsDialog(QDialog):
         self._settings.save()
         self._on_saved()
         self.accept()
+
+
+class HelpWindow(QDialog):
+    """Modern control center for EggMan containing system commands and about info."""
+
+    clear_requested = Signal()
+    export_requested = Signal()
+    settings_requested = Signal()
+
+    def __init__(self, settings: SettingsManager, config: ConfigManager, theme_mgr: ThemeManager, parent=None) -> None:
+        super().__init__(parent)
+        self._settings = settings
+        self._config = config
+        self._theme_mgr = theme_mgr
+
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+
+        # Match dimensions to main window
+        w = int(self._settings.get("win_w") or Theme.WIN_W)
+        h = int(self._settings.get("win_h") or Theme.WIN_H)
+        self.setFixedSize(w, h)
+
+        if parent:
+            pg = parent.geometry()
+            cx = pg.x() + (pg.width() - w) // 2
+            cy = pg.y() + (pg.height() - h) // 2
+            self.move(cx, cy)
+
+        self._build_ui()
+
+    def _build_ui(self) -> None:
+        base_layout = QVBoxLayout(self)
+        base_layout.setContentsMargins(0, 0, 0, 0)
+
+        self.container = QWidget(self)
+        self.container.setObjectName("container")
+        base_layout.addWidget(self.container)
+
+        layout = QVBoxLayout(self.container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+
+        # Reusable title bar configured for EGGMAN HELP
+        self._title_bar = TitleBar(self)
+        self._title_bar._title_label.setText("EGGMAN HELP")
+        layout.addWidget(self._title_bar)
+
+        content_widget = QWidget(self.container)
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(18, 16, 18, 16)
+        content_layout.setSpacing(10)
+
+        info_lbl = QLabel("/help opens this window instead of sending a chat message.")
+        info_lbl.setWordWrap(True)
+        info_lbl.setAlignment(Qt.AlignCenter)
+        info_lbl.setFont(QFont("Segoe UI", 9))
+        content_layout.addWidget(info_lbl)
+
+        content_layout.addWidget(self._create_divider())
+
+        # Control Panel buttons
+        self.clear_btn = QPushButton("Clear Chat")
+        self.export_btn = QPushButton("Export Chat")
+        self.theme_btn = QPushButton()
+        self.settings_btn = QPushButton("Settings")
+
+        for btn in (self.clear_btn, self.export_btn, self.theme_btn, self.settings_btn):
+            btn.setFixedHeight(36)
+            btn.setCursor(Qt.PointingHandCursor)
+            content_layout.addWidget(btn)
+
+        self.clear_btn.clicked.connect(self.clear_requested.emit)
+        self.export_btn.clicked.connect(self.export_requested.emit)
+        self.theme_btn.clicked.connect(self._toggle_theme)
+        self.settings_btn.clicked.connect(self.settings_requested.emit)
+
+        # Feedback/success status message label
+        self.status_lbl = QLabel("")
+        self.status_lbl.setAlignment(Qt.AlignCenter)
+        self.status_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        content_layout.addWidget(self.status_lbl)
+
+        content_layout.addWidget(self._create_divider())
+
+        # About info
+        about_title = QLabel("About EggMan")
+        about_title.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        content_layout.addWidget(about_title)
+
+        about_desc = QLabel(
+            "EggMan is a modular desktop AI companion designed to provide an intelligent and extensible desktop experience."
+        )
+        about_desc.setWordWrap(True)
+        about_desc.setFont(QFont("Segoe UI", 9))
+        content_layout.addWidget(about_desc)
+
+        # Metadata grid
+        self.meta_layout = QFormLayout()
+        self.meta_layout.setSpacing(4)
+        self.meta_layout.setContentsMargins(0, 4, 0, 0)
+
+        self.version_lbl = QLabel()
+        self.provider_lbl = QLabel()
+        self.theme_lbl = QLabel()
+
+        for lbl in (self.version_lbl, self.provider_lbl, self.theme_lbl):
+            lbl.setFont(QFont("Segoe UI", 9))
+
+        self.meta_layout.addRow("Version:", self.version_lbl)
+        self.meta_layout.addRow("Current Provider:", self.provider_lbl)
+        self.meta_layout.addRow("Current Theme:", self.theme_lbl)
+
+        content_layout.addLayout(self.meta_layout)
+        content_layout.addStretch()
+
+        layout.addWidget(content_widget, stretch=1)
+
+        self.apply_theme()
+        self.update_info()
+
+    def _create_divider(self) -> QFrame:
+        d = QFrame()
+        d.setFrameShape(QFrame.HLine)
+        d.setFixedHeight(1)
+        d.setObjectName("divider")
+        return d
+
+    def _toggle_theme(self) -> None:
+        current = self._config.get("theme") or self._settings.get("theme") or "light"
+        next_theme = "dark" if current == "light" else "light"
+        self._settings.set("theme", next_theme)
+        self._config.set("theme", next_theme)
+        self._config.save()
+        self._settings.save()
+        self._theme_mgr.apply(next_theme)
+        self.update_info()
+
+    def update_info(self) -> None:
+        theme_name = self._config.get("theme") or self._settings.get("theme") or "light"
+        self.theme_btn.setText(f"Theme: {theme_name.capitalize()}")
+
+        # Avoid circular dependencies
+        from main import APP_VERSION
+        provider_name = self._config.get("provider") or "ollama"
+
+        self.version_lbl.setText(APP_VERSION)
+        self.provider_lbl.setText(provider_name.capitalize())
+        self.theme_lbl.setText(theme_name.capitalize())
+
+    def show_status_message(self, message: str) -> None:
+        self.status_lbl.setText(message)
+        QTimer.singleShot(3000, lambda: self.status_lbl.setText(""))
+
+    def apply_theme(self) -> None:
+        if not hasattr(self, "container"):
+            return
+
+        self._title_bar.apply_theme()
+
+        self.container.setStyleSheet(f"""
+            QWidget#container {{
+                background: {Theme.CREAM};
+                border: 1.5px solid {Theme.BORDER};
+                border-radius: {Theme.RADIUS}px;
+            }}
+        """)
+
+        btn_ss = f"""
+            QPushButton {{
+                background: {Theme.BTN_BG}; color: {Theme.TEXT_DARK};
+                border: 1px solid {Theme.BORDER}; border-radius: 8px;
+                font-family: 'Segoe UI'; font-size: 13px; font-weight: 500;
+            }}
+            QPushButton:hover {{ background: {Theme.BTN_HOVER}; }}
+            QPushButton:pressed {{ background: {Theme.BTN_PRESS}; }}
+        """
+        for btn in (self.clear_btn, self.export_btn, self.theme_btn, self.settings_btn):
+            btn.setStyleSheet(btn_ss)
+
+        text_dark_ss = f"color: {Theme.TEXT_DARK}; background: transparent; border: none;"
+        text_mid_ss = f"color: {Theme.TEXT_MID}; background: transparent; border: none;"
+
+        for label in self.findChildren(QLabel):
+            if label.parent() == self._title_bar:
+                continue
+            if self.meta_layout.labelForField(label) is not None:
+                label.setStyleSheet(text_mid_ss)
+            else:
+                label.setStyleSheet(text_dark_ss)
+
+        self.status_lbl.setStyleSheet(f"color: {Theme.TEXT_MID}; background: transparent; border: none;")
+
+        for divider in self.findChildren(QFrame, "divider"):
+            divider.setStyleSheet(f"background: {Theme.BORDER}; border: none;")

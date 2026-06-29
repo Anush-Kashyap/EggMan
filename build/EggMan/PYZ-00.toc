@@ -2296,6 +2296,7 @@
   ('lzma',
    'C:\\Users\\anush\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\lzma.py',
    'PYMODULE'),
+  ('main', 'C:\\Users\\anush\\OneDrive\\Desktop\\Eggman\\main.py', 'PYMODULE'),
   ('markdown_it',
    'C:\\Users\\anush\\OneDrive\\Desktop\\Eggman\\.venv\\Lib\\site-packages\\markdown_it\\__init__.py',
    'PYMODULE'),

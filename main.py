@@ -184,6 +184,8 @@ class EggManWindow(QWidget):
         self._title_bar.apply_theme()
         self._chat.apply_theme()
         self._input_bar.apply_theme()
+        if hasattr(self, "_help_window") and self._help_window is not None:
+            self._help_window.apply_theme()
 
     def _post_welcome(self):
         self._chat.append_message("egg", "Hello! I'm EggMan 🥚", self._now())
@@ -300,6 +302,9 @@ class EggManWindow(QWidget):
         elif result.action == "settings":
             self._open_settings()
 
+        elif result.action == "help":
+            self._open_help()
+
         elif result.action.startswith("theme_"):
             theme_name = result.action.split("_", 1)[1]
             self._settings.set("theme", theme_name)
@@ -392,6 +397,35 @@ class EggManWindow(QWidget):
         )
         dialog.exec()
 
+    def _open_help(self):
+        if not hasattr(self, "_help_window") or self._help_window is None:
+            from ui.dialogs import HelpWindow
+            self._help_window = HelpWindow(
+                settings=self._settings,
+                config=self._config,
+                theme_mgr=self._theme_mgr,
+                parent=self,
+            )
+            self._help_window.clear_requested.connect(self._on_help_clear)
+            self._help_window.export_requested.connect(self._on_help_export)
+            self._help_window.settings_requested.connect(self._open_settings)
+        
+        self._help_window.update_info()
+        self._help_window.show()
+        self._help_window.raise_()
+        self._help_window.activateWindow()
+
+    def _on_help_clear(self):
+        self._chat.clear_messages()
+        if hasattr(self, "_help_window") and self._help_window is not None:
+            self._help_window.show_status_message("Chat cleared!")
+
+    def _on_help_export(self):
+        msg = self._export_chat()
+        self._chat.append_message("egg", msg, self._now())
+        if hasattr(self, "_help_window") and self._help_window is not None:
+            self._help_window.show_status_message("Chat exported successfully!")
+
     def _apply_settings(self):
         self._apply_settings_flags()
         self._services.reload_wake_word()
@@ -422,6 +456,8 @@ class EggManWindow(QWidget):
         self._voice.stop()
         if hasattr(self._services, "wake_word_service"):
             self._services.wake_word_service.stop()
+        if hasattr(self, "_help_window") and self._help_window is not None:
+            self._help_window.close()
         self._logger.info("Application shutdown")
         super().closeEvent(event)
 
