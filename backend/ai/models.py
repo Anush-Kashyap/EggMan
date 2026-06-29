@@ -44,6 +44,7 @@ class AIRequest:
     memories: List[MemoryEntry] = field(default_factory=list)
     tool_results: List[Dict[str, Any]] = field(default_factory=list)
     attachments: List[Attachment] = field(default_factory=list)
+    images: List[str] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
     model_name: Optional[str] = None
 

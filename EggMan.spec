@@ -1,6 +1,9 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from PyInstaller.utils.hooks import collect_submodules
+from faster_whisper.utils import get_assets_path
+import openwakeword
+from pathlib import Path
 
 
 block_cipher = None
@@ -8,6 +11,9 @@ block_cipher = None
 hiddenimports = [
     "tkinter",
     "_tkinter",
+    "openwakeword",
+    "scipy",
+    "sklearn",
     *collect_submodules("backend"),
     *collect_submodules("core"),
     *collect_submodules("ui"),
@@ -17,6 +23,9 @@ hiddenimports = [
 datas = [
     ("assets", "assets"),
     ("data/config.json", "data"),
+    (get_assets_path(), "faster_whisper/assets"),
+    (str(Path(openwakeword.__file__).parent / "resources"), "openwakeword/resources"),
+    (str(Path(openwakeword.__file__).parent / "resources"), "_internal/openwakeword/resources"),
 ]
 
 a = Analysis(

@@ -5,9 +5,17 @@ import sys
 
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+
+try:
+    import chromadb
+    HAS_CHROMADB = True
+except ImportError:
+    HAS_CHROMADB = False
 
 
 def test_conversation_engine_uses_provider(monkeypatch):
@@ -32,12 +40,12 @@ def test_config_manager_loads_and_saves(tmp_path):
     config_path = tmp_path / "config.json"
     manager = ConfigManager(config_path=config_path)
 
-    manager.set("provider", "local")
+    manager.set("provider", "ollama")
     manager.set("typing_delay", 1234)
     manager.save()
 
     reloaded = ConfigManager(config_path=config_path)
-    assert reloaded.get("provider") == "local"
+    assert reloaded.get("provider") == "ollama"
     assert reloaded.get("typing_delay") == 1234
 
 
@@ -106,6 +114,7 @@ def test_streaming_and_emotion_layers_are_available():
     registry.register(DemoTool)
 
 
+@pytest.mark.skipif(not HAS_CHROMADB, reason="chromadb not installed")
 def test_embedding_and_retrieval_layers_integrate(tmp_path):
     from backend.context.context_builder import ContextBuilder
     from backend.embeddings.embedding_service import EmbeddingService

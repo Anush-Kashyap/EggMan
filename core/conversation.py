@@ -9,14 +9,14 @@ class ConversationEngine:
         self._ai_engine = ai_engine
         self._fallback_provider = LocalProvider()
 
-    def get_reply(self, user_message: str) -> str:
+    def get_reply(self, user_message: str, images: list[str] | None = None) -> str:
         start = perf_counter()
         if self._ai_engine is None:
-            response = self._fallback_provider.generate(AIRequest(user_message=user_message))
+            response = self._fallback_provider.generate(AIRequest(user_message=user_message, images=images or []))
             reply = response.response_text if hasattr(response, 'response_text') else str(response)
             return str(reply).strip() if reply else "I'm thinking..."
 
-        request = AIRequest(user_message=user_message)
+        request = AIRequest(user_message=user_message, images=images or [])
         response = self._ai_engine.generate(request)
         elapsed_ms = (perf_counter() - start) * 1000
         self._ai_engine._logger.debug(

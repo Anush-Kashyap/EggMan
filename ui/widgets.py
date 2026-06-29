@@ -276,11 +276,15 @@ class InputBar(QWidget):
         layout.addWidget(self.entry, stretch=1)
 
         self.send_btn = self._make_icon_btn("➤")
+        self.mic_btn = self._make_icon_btn("🎤")
         self.screenshot_btn = self._make_icon_btn("⊡")
+        layout.addWidget(self.mic_btn)
         layout.addWidget(self.send_btn)
         layout.addWidget(self.screenshot_btn)
 
-        self._icon_btns = [self.send_btn, self.screenshot_btn]
+        self._icon_btns = [self.mic_btn, self.send_btn, self.screenshot_btn]
+        self._default_placeholder = "Say something..."
+        self._voice_listening = False
         self.apply_theme()
 
     def _make_icon_btn(self, icon: str) -> QPushButton:
@@ -309,3 +313,45 @@ class InputBar(QWidget):
         """
         for btn in self._icon_btns:
             btn.setStyleSheet(btn_ss)
+        if hasattr(self, "mic_btn"):
+            self._apply_mic_style(listening=self._voice_listening)
+
+    def set_voice_listening(self, listening: bool) -> None:
+        self._voice_listening = listening
+        self._apply_mic_style(listening=listening)
+        if listening:
+            self.entry.setPlaceholderText("Listening...")
+        elif self.entry.placeholderText() == "Listening...":
+            self.entry.setPlaceholderText(self._default_placeholder)
+
+    def set_voice_processing(self, processing: bool) -> None:
+        if processing:
+            self.entry.setPlaceholderText("Transcribing...")
+        elif self.entry.placeholderText() == "Transcribing...":
+            self.entry.setPlaceholderText(self._default_placeholder)
+
+    def set_voice_controls_enabled(self, enabled: bool) -> None:
+        self.mic_btn.setEnabled(enabled)
+
+    def _apply_mic_style(self, listening: bool) -> None:
+        if listening:
+            self.mic_btn.setText("●")
+            self.mic_btn.setStyleSheet(f"""
+                QPushButton {{
+                    background: #E0B0B0; color: #8B0000;
+                    border: 1.5px solid #C89090; border-radius: 17px;
+                }}
+                QPushButton:hover {{ background: #D8A0A0; }}
+                QPushButton:pressed {{ background: #C89090; }}
+            """)
+        else:
+            self.mic_btn.setText("🎤")
+            btn_ss = f"""
+                QPushButton {{
+                    background: {Theme.BTN_BG}; color: {Theme.TEXT_DARK};
+                    border: none; border-radius: 17px;
+                }}
+                QPushButton:hover {{ background: {Theme.BTN_HOVER}; }}
+                QPushButton:pressed {{ background: {Theme.BTN_PRESS}; }}
+            """
+            self.mic_btn.setStyleSheet(btn_ss)

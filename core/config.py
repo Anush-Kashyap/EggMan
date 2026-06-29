@@ -10,12 +10,14 @@ from core.paths import _path, external_path, resource_path
 
 class ConfigManager:
     _DEFAULTS = {
-        "provider": "local",
+        "provider": "ollama",
         "typing_delay": 1000,
         "theme": "light",
         "always_on_top": True,
-        "future_ai_model": "",
-        "gemini_api_key": "",
+        "ollama_base_url": "http://localhost:11434",
+        "ollama_model": "qwen3:8b",
+        "voice_whisper_model": "base",
+        "wake_word_enabled": True,
     }
 
     def __init__(self, config_path: str | os.PathLike | None = None):
@@ -37,7 +39,19 @@ class ConfigManager:
                             self._data[key] = saved[key]
             except (json.JSONDecodeError, OSError):
                 pass
+        if self._data.get("provider") in {"gemini", "local"}:
+            self._data["provider"] = "ollama"
+            self._migrate_legacy_keys()
+            self.save()
         return dict(self._data)
+
+    def _migrate_legacy_keys(self) -> None:
+        """Drop legacy provider keys and ensure Ollama defaults exist."""
+        for legacy_key in ("gemini_api_key", "future_ai_model"):
+            self._data.pop(legacy_key, None)
+        self._data.setdefault("ollama_base_url", self._DEFAULTS["ollama_base_url"])
+        self._data.setdefault("ollama_model", self._DEFAULTS["ollama_model"])
+        self._data.setdefault("voice_whisper_model", self._DEFAULTS["voice_whisper_model"])
 
     def save(self) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)

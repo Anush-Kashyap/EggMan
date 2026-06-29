@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from backend.ai.ai_engine import AIEngine
-from backend.ai.models import AIRequest, AIResponse
+from backend.ai.ollama_provider import OllamaProvider
 from backend.ai.provider_registry import ProviderRegistry
-from backend.ai.gemini_provider import GeminiProvider
 from backend.ai.prompt_pipeline import PromptPipeline
 from backend.ai.streaming import StreamingPipeline
 from backend.context.context_builder import ContextBuilder
@@ -19,16 +17,18 @@ from backend.memory.memory_manager import MemoryManager
 from backend.memory.memory_repository import MemoryRepository
 from backend.memory.memory_service import MemoryService
 from backend.retrieval.retrieval_service import RetrievalService
-from backend.tools.builtins import ApplicationRegistry, AppLauncherTool, CalculatorTool, ClipboardTool
+from backend.voice.speech_to_text import SpeechToTextService
+from backend.voice.voice_manager import VoiceManager
 from backend.tools.registry import ToolRegistry
 from backend.tools.router import ToolRouter
 from backend.tools.tool_manager import ToolManager
+from backend.tools.builtins import ApplicationRegistry, CalculatorTool, ClipboardTool, AppLauncherTool
 from core.commands import CommandHandler
 from core.config import ConfigManager
 from core.conversation import ConversationEngine
 from core.logger import AppLogger
 from core.paths import APP_ROOT, IS_FROZEN, RESOURCE_ROOT, USER_DATA_ROOT
-from core.providers import LocalProvider
+from core.providers import BaseProvider, LocalProvider
 from core.settings import SettingsManager
 
 
@@ -81,30 +81,21 @@ class AppContainer:
         self.emotion_engine = EmotionEngine()
         self.provider_registry = ProviderRegistry()
         self.provider_registry.register("local", LocalProvider)
-        self.provider_registry.register(
-            "gemini",
-            lambda: GeminiProvider(api_key=self.config_manager.get("gemini_api_key") or None),
-        )
+        self.provider_registry.register("ollama", self._create_ollama_factory())
 
-        provider_key = str(self.config_manager.get("provider", "local"))
-        gemini_key_configured = bool(
-            self.config_manager.get("gemini_api_key")
-            or os.getenv("GEMINI_API_KEY")
-            or os.getenv("EGGMAN_GEMINI_API_KEY")
-        )
-        if provider_key == "gemini" and not gemini_key_configured:
-            self.logger.warning("Gemini provider selected but no API key is configured; falling back to local provider")
-            provider_key = "local"
-        if not self.provider_registry.activate(provider_key):
-            self.provider_registry.activate("local")
+        provider_key = str(self.config_manager.get("provider", "ollama"))
+        if provider_key != "ollama":
+            self.logger.info("Migrating provider %s to ollama", provider_key)
+            self.config_manager.set("provider", "ollama")
+            self.config_manager.save()
+        self.provider_registry.activate("ollama")
 
-        provider_cls = self.provider_registry.get()
-        self.provider = LocalProvider()
+        self.ollama_startup_error: str | None = self._check_ollama_startup()
         self.logger.info(
-            "Provider registry initialized active=%s available=%s gemini_key_configured=%s",
+            "Provider registry initialized active=%s available=%s ollama_ok=%s",
             self.provider_registry.active_provider_name(),
             self.provider_registry.available_providers(),
-            gemini_key_configured,
+            self.ollama_startup_error is None,
         )
 
         self.ai_engine = AIEngine(
@@ -116,4 +107,56 @@ class AppContainer:
         )
         self.conversation_engine = ConversationEngine(ai_engine=self.ai_engine)
 
+        self.speech_to_text = SpeechToTextService(
+            model_size=str(self.config_manager.get("voice_whisper_model")),
+        )
+        self.voice_manager = VoiceManager(speech_service=self.speech_to_text)
+
+        from backend.voice.wake_word import WakeWordService
+        self.wake_word_service = WakeWordService(self.voice_manager, self.config_manager)
+
+        from backend.vision.vision_manager import VisionManager
+        self.vision_manager = VisionManager()
+
         self.logger.info("Application services initialized")
+
+    def reload_wake_word(self) -> None:
+        if hasattr(self, "wake_word_service"):
+            self.wake_word_service.stop()
+            self.wake_word_service.start()
+
+    def _create_ollama_factory(self) -> Callable[[], BaseProvider]:
+        def factory() -> BaseProvider:
+            return OllamaProvider(
+                base_url=self.config_manager.get("ollama_base_url"),
+                model_name=self.config_manager.get("ollama_model"),
+            )
+
+        return factory
+
+    def _check_ollama_startup(self) -> str | None:
+        provider = OllamaProvider(
+            base_url=self.config_manager.get("ollama_base_url"),
+            model_name=self.config_manager.get("ollama_model"),
+        )
+        result = provider.test_connection()
+        if result.get("ok"):
+            self.logger.info(
+                "Ollama startup check passed model=%s elapsed_ms=%s",
+                result.get("model"),
+                result.get("elapsed_ms"),
+            )
+            return None
+
+        error = result.get("error", "Ollama is not running. Start Ollama and try again.")
+        self.logger.error("Ollama startup check failed: %s", error)
+        return str(error)
+
+    def reload_ollama_provider(self) -> str | None:
+        """Re-register Ollama with current config values. Returns an error message or None."""
+        self.config_manager.set("provider", "ollama")
+        self.config_manager.save()
+        self.provider_registry.register("ollama", self._create_ollama_factory())
+        self.provider_registry.activate("ollama")
+        self.ollama_startup_error = self._check_ollama_startup()
+        return self.ollama_startup_error

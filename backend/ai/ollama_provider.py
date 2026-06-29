@@ -16,7 +16,7 @@ from core.providers import BaseProvider
 class OllamaProvider(BaseProvider):
     """Local Ollama provider using the Ollama HTTP API."""
 
-    DEFAULT_BASE_URL = "http://127.0.0.1:11434"
+    DEFAULT_BASE_URL = "http://localhost:11434"
     DEFAULT_MODEL = "qwen3:8b"
 
     def __init__(
@@ -25,11 +25,11 @@ class OllamaProvider(BaseProvider):
         model_name: Optional[str] = None,
         provider_name: Optional[str] = None,
     ) -> None:
-        super().__init__(provider_name=provider_name)
+        super().__init__(provider_name=provider_name or "ollama")
         self._base_url = (base_url or os.getenv("OLLAMA_BASE_URL") or self.DEFAULT_BASE_URL).rstrip("/")
         self._configured_model = model_name or os.getenv("OLLAMA_MODEL") or self.DEFAULT_MODEL
-        self._model_name = self._resolve_model_name()
         self._logger = logging.getLogger("eggman")
+        self._model_name = self._resolve_model_name()
         self._logger.info(
             "OllamaProvider initialized base_url=%s model=%s configured_model=%s",
             self._base_url,
@@ -43,56 +43,115 @@ class OllamaProvider(BaseProvider):
 
     def test_connection(self) -> dict[str, Any]:
         start = time.perf_counter()
-        models = self._list_models()
-        return {
-            "ok": True,
-            "base_url": self._base_url,
-            "model": self._model_name,
-            "available_models": models,
-            "elapsed_ms": round((time.perf_counter() - start) * 1000, 1),
-        }
+        elapsed_ms = lambda: round((time.perf_counter() - start) * 1000, 1)
+        try:
+            models = self._list_models()
+            resolved = self._resolve_model_name_from_list(models)
+            self._logger.info(
+                "Ollama test_connection ok base_url=%s model=%s elapsed_ms=%.1f",
+                self._base_url,
+                resolved,
+                elapsed_ms(),
+            )
+            return {
+                "ok": True,
+                "base_url": self._base_url,
+                "model": resolved,
+                "configured_model": self._configured_model,
+                "available_models": models,
+                "elapsed_ms": elapsed_ms(),
+            }
+        except Exception as exc:
+            error = self._friendly_error(exc)
+            self._logger.error(
+                "Ollama test_connection failed base_url=%s elapsed_ms=%.1f error=%s",
+                self._base_url,
+                elapsed_ms(),
+                error,
+            )
+            return {
+                "ok": False,
+                "base_url": self._base_url,
+                "model": self._model_name,
+                "configured_model": self._configured_model,
+                "error": error,
+                "elapsed_ms": elapsed_ms(),
+            }
 
     def generate(self, request: AIRequest) -> AIResponse:
         start = time.perf_counter()
-        self._logger.info("Ollama generate request model=%s message_len=%d", self._model_name, len(request.user_message or ""))
+        if getattr(request, "images", None):
+            model = "qwen2.5vl:7b"
+            self._logger.info("Vision model selected")
+        else:
+            model = request.model_name or self._model_name
+
+        self._logger.info("Ollama generate request model=%s message_len=%d", model, len(request.user_message or ""))
         payload = {
-            "model": request.model_name or self._model_name,
+            "model": model,
             "prompt": self._format_request_text(request),
             "stream": False,
         }
+        if getattr(request, "images", None):
+            payload["images"] = request.images
+
+        if model == "qwen2.5vl:7b":
+            self._logger.info("Vision request sent")
 
         try:
             data = self._post_json("/api/generate", payload, timeout=120)
             if "error" in data:
                 raise RuntimeError(str(data["error"]))
             text = str(data.get("response", "")).strip()
-            self._logger.info(
-                "Ollama generate completed model=%s elapsed_ms=%.1f text_len=%d",
-                payload["model"],
-                (time.perf_counter() - start) * 1000,
-                len(text),
-            )
+            elapsed_ms = (time.perf_counter() - start) * 1000
+
+            if model == "qwen2.5vl:7b":
+                self._logger.info("Vision response received")
+                self._logger.info("Request duration: %.1fms", elapsed_ms)
+            else:
+                self._logger.info(
+                    "Ollama generate completed model=%s elapsed_ms=%.1f text_len=%d",
+                    model,
+                    elapsed_ms,
+                    len(text),
+                )
             return AIResponse(
                 response_text=text,
-                model_name=str(payload["model"]),
+                model_name=str(model),
                 finish_reason="completed" if data.get("done", True) else None,
                 provider_name=self.provider_name,
                 metadata={"ollama": {key: data.get(key) for key in ("total_duration", "load_duration", "eval_count")}},
             )
         except Exception as exc:
-            self._logger.exception("Ollama generate failed: %s", exc)
-            return AIResponse(error=self._friendly_error(exc), model_name=str(payload["model"]), provider_name=self.provider_name)
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            self._logger.error("Ollama generate failed model=%s elapsed_ms=%.1f error=%s", model, elapsed_ms, exc)
+            return AIResponse(error=self._friendly_error(exc, model), model_name=str(model), provider_name=self.provider_name)
 
     def stream(self, request: AIRequest) -> StreamingResponse:
+        start = time.perf_counter()
+        if getattr(request, "images", None):
+            model = "qwen2.5vl:7b"
+            self._logger.info("Vision model selected")
+        else:
+            model = request.model_name or self._model_name
+
         payload = {
-            "model": request.model_name or self._model_name,
+            "model": model,
             "prompt": self._format_request_text(request),
             "stream": True,
         }
-        self._logger.info("Ollama stream request model=%s message_len=%d", payload["model"], len(request.user_message or ""))
-        return StreamingResponse(chunks=self._stream_chunks(payload))
+        if getattr(request, "images", None):
+            payload["images"] = request.images
 
-    def _stream_chunks(self, payload: dict[str, Any]) -> Iterable[str]:
+        if model == "qwen2.5vl:7b":
+            self._logger.info("Vision request sent")
+
+        self._logger.info("Ollama stream request model=%s message_len=%d", model, len(request.user_message or ""))
+        return StreamingResponse(chunks=self._stream_chunks(payload, start))
+
+    def _stream_chunks(self, payload: dict[str, Any], start: float) -> Iterable[str]:
+        model = payload["model"]
+        is_vision = (model == "qwen2.5vl:7b")
         try:
             for data in self._post_stream("/api/generate", payload, timeout=120):
                 if "error" in data:
@@ -101,28 +160,49 @@ class OllamaProvider(BaseProvider):
                 if text:
                     yield str(text)
                 if data.get("done"):
-                    self._logger.info("Ollama stream completed model=%s", payload["model"])
+                    elapsed_ms = (time.perf_counter() - start) * 1000
+                    if is_vision:
+                        self._logger.info("Vision response received")
+                        self._logger.info("Request duration: %.1fms", elapsed_ms)
+                    else:
+                        self._logger.info("Ollama stream completed model=%s elapsed_ms=%.1f", model, elapsed_ms)
                     break
         except Exception as exc:
-            self._logger.exception("Ollama stream failed: %s", exc)
-            yield self._friendly_error(exc)
+            elapsed_ms = (time.perf_counter() - start) * 1000
+            self._logger.error("Ollama stream failed model=%s elapsed_ms=%.1f error=%s", model, elapsed_ms, exc)
+            yield self._friendly_error(exc, model)
 
     def _resolve_model_name(self) -> str:
-        if self._configured_model != self.DEFAULT_MODEL:
-            try:
-                models = self._list_models()
-            except RuntimeError:
-                return self._configured_model
-            if self.DEFAULT_MODEL in models:
-                return self.DEFAULT_MODEL
+        try:
+            models = self._list_models()
+        except RuntimeError as exc:
+            self._logger.warning(
+                "Ollama unavailable during init; using configured model=%s error=%s",
+                self._configured_model,
+                exc,
+            )
             return self._configured_model
-        return self.DEFAULT_MODEL
+        return self._resolve_model_name_from_list(models)
+
+    def _resolve_model_name_from_list(self, models: list[str]) -> str:
+        if self.DEFAULT_MODEL in models:
+            self._logger.info("Ollama model selected=%s (default)", self.DEFAULT_MODEL)
+            return self.DEFAULT_MODEL
+        if self._configured_model in models:
+            self._logger.info(
+                "Ollama model selected=%s (configured fallback; %s unavailable)",
+                self._configured_model,
+                self.DEFAULT_MODEL,
+            )
+            return self._configured_model
+        self._logger.warning(
+            "Ollama model fallback to configured=%s (not found in available models)",
+            self._configured_model,
+        )
+        return self._configured_model
 
     def _list_models(self) -> list[str]:
-        try:
-            data = self._get_json("/api/tags", timeout=5)
-        except RuntimeError:
-            raise
+        data = self._get_json("/api/tags", timeout=5)
         models = data.get("models", [])
         names = []
         for model in models:
@@ -193,8 +273,9 @@ class OllamaProvider(BaseProvider):
             method="POST",
         )
 
-    def _friendly_error(self, exc: Exception) -> str:
+    def _friendly_error(self, exc: Exception, model_name: Optional[str] = None) -> str:
         message = str(exc)
+        model = model_name or self._model_name
         if "not found" in message.lower():
-            return f"Ollama model '{self._model_name}' is not available. Run: ollama pull {self._model_name}"
+            return f"Ollama model '{model}' is not available. Run: ollama pull {model}"
         return message
