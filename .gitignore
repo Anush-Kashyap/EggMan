@@ -7,25 +7,40 @@ __pycache__/
 .vscode/
 # Environment variables
 .env
-# OS files
+# OS/User specific files
 .DS_Store
 Thumbs.db
-.screenshots/
-.data/logs/
-.build/
-.dist/
+eggman_settings.json
+tmp.log
+tmp.sqlite3
+
+# PyInstaller / Build output
+build/
+dist/
 *.pyz
-# SQLite databases
+*.egg-info/
+
+# Local databases and logs
 *.sqlite3
-# Log files
+*.db
 *.log
-# Coverage reports
+brain/
+
+# Local data generated at runtime
+data/logs/
+data/screenshots/
+data/exports/
+
+# Coverage / Testing / Linting
 .coverage
 htmlcov/
-# Testing
 .pytest_cache/
-# Linting
 .flake8_cache/
+.mypy_cache/
+.cache/
+.tox/
+.eggs/
+
 # Terraform
 .terraform/
 # IDEs
@@ -33,8 +48,3 @@ htmlcov/
 .project
 .pydevproject
 .Trashes
-# Build tools
-.eggs
-.cache
-.tox
-.mypy_cache
