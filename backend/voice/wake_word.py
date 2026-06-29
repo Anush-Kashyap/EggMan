@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
 import threading
 import time
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 import numpy as np
 import sounddevice as sd
-from openwakeword.model import Model
 
 logger = logging.getLogger("eggman")
 
@@ -26,8 +24,9 @@ class WakeWordService:
         self._thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
         self._paused = False
-        self._model: Optional[Model] = None
-        self._wakeword_name = "hey_jarvis"
+        self._model: Any | None = None
+        self._wakeword_name = str(self._config_manager.get("wake_word_name", "alexa")).strip() or "alexa"
+        self._threshold = self._get_threshold()
         self._is_running = False
 
         # Register state listener on VoiceManager
@@ -37,6 +36,14 @@ class WakeWordService:
         # Audio parameters
         self._sample_rate = 16000
         self._chunk_size = 1280
+
+    def _get_threshold(self) -> float:
+        try:
+            threshold = float(self._config_manager.get("wake_word_threshold", 0.5))
+        except (TypeError, ValueError):
+            logger.warning("Invalid wake_word_threshold config; using default 0.5")
+            return 0.5
+        return min(max(threshold, 0.05), 0.95)
 
     def start(self) -> None:
         """Start the background wake word thread if enabled and not already running."""
@@ -87,14 +94,54 @@ class WakeWordService:
 
     def _initialize_model(self) -> bool:
         try:
-            logger.info("Loading built-in 'alexa' wake word model.")
-            self._model = Model(wakeword_models=["alexa"], inference_framework="onnx")
-            self._wakeword_name = "alexa"
-            logger.info("Detector initialized")
+            from openwakeword.model import Model
+
+            self._configure_openwakeword_resources()
+            logger.info("Loading built-in '%s' wake word model.", self._wakeword_name)
+            self._model = Model(wakeword_models=[self._wakeword_name], inference_framework="onnx")
+            logger.info("Detector initialized threshold=%.2f", self._threshold)
             return True
         except Exception as exc:
-            logger.error("Wake word error: Failed to initialize openWakeWord model: %s", exc)
+            logger.exception("Wake word error: Failed to initialize openWakeWord model: %s", exc)
             return False
+
+    def _configure_openwakeword_resources(self) -> None:
+        """Point openWakeWord at bundled model files when running from PyInstaller."""
+        if not getattr(sys, "frozen", False):
+            return
+
+        import openwakeword
+
+        candidates = [
+            Path(getattr(sys, "_MEIPASS", "")) / "openwakeword" / "resources",
+            Path(sys.executable).resolve().parent / "_internal" / "openwakeword" / "resources",
+            Path(sys.executable).resolve().parent / "openwakeword" / "resources",
+        ]
+        resource_root = next((candidate for candidate in candidates if candidate.exists()), None)
+        if resource_root is None:
+            logger.error(
+                "Wake word error: bundled openWakeWord resources were not found. Checked: %s",
+                ", ".join(str(candidate) for candidate in candidates),
+            )
+            return
+
+        model_dir = resource_root / "models"
+        for model_name, model_info in openwakeword.MODELS.items():
+            model_path = model_dir / f"{model_name}_v0.1.tflite"
+            if model_path.exists():
+                model_info["model_path"] = str(model_path)
+        for model_info in openwakeword.FEATURE_MODELS.values():
+            filename = Path(model_info["model_path"]).name
+            model_path = model_dir / filename
+            if model_path.exists():
+                model_info["model_path"] = str(model_path)
+        for model_info in openwakeword.VAD_MODELS.values():
+            filename = Path(model_info["model_path"]).name
+            model_path = model_dir / filename
+            if model_path.exists():
+                model_info["model_path"] = str(model_path)
+
+        logger.info("Using bundled openWakeWord resources: %s", resource_root)
 
     def _run_loop(self) -> None:
         if not self._initialize_model():
@@ -122,9 +169,6 @@ class WakeWordService:
                         if data.size == 0:
                             continue
 
-                        # Log frames received
-                        logger.info("Frames received")
-
                         # Reshape/flatten for model input
                         audio_chunk = data.flatten()
 
@@ -132,10 +176,9 @@ class WakeWordService:
                         prediction = self._model.predict(audio_chunk)
                         score = prediction.get(self._wakeword_name, 0.0)
 
-                        # Log detector confidence score
-                        logger.info("Detector confidence score: %f", score)
+                        logger.debug("Detector confidence score: %.6f", score)
 
-                        if score > 0.5:
+                        if score >= self._threshold:
                             logger.info("Wake word detected")
                             self._trigger_wake_word_activation()
                             break  # Exit inner loop to release stream for VoiceManager

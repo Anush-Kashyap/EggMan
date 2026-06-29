@@ -18,6 +18,8 @@ class ConfigManager:
         "ollama_model": "qwen3:8b",
         "voice_whisper_model": "base",
         "wake_word_enabled": True,
+        "wake_word_name": "alexa",
+        "wake_word_threshold": 0.5,
     }
 
     def __init__(self, config_path: str | os.PathLike | None = None):

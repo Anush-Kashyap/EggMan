@@ -1,9 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 from faster_whisper.utils import get_assets_path
-import openwakeword
-from pathlib import Path
 
 
 block_cipher = None
@@ -12,8 +10,12 @@ hiddenimports = [
     "tkinter",
     "_tkinter",
     "openwakeword",
+    "onnxruntime",
+    "onnxruntime.capi._pybind_state",
+    "onnxruntime.capi.onnxruntime_pybind11_state",
     "scipy",
     "sklearn",
+    *collect_submodules("openwakeword"),
     *collect_submodules("backend"),
     *collect_submodules("core"),
     *collect_submodules("ui"),
@@ -24,8 +26,7 @@ datas = [
     ("assets", "assets"),
     ("data/config.json", "data"),
     (get_assets_path(), "faster_whisper/assets"),
-    (str(Path(openwakeword.__file__).parent / "resources"), "openwakeword/resources"),
-    (str(Path(openwakeword.__file__).parent / "resources"), "_internal/openwakeword/resources"),
+    *collect_data_files("openwakeword", includes=["resources/**/*"]),
 ]
 
 a = Analysis(
@@ -63,7 +64,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=["assets/eggman.ico"],
+    icon="assets/eggman.ico",
 )
 
 coll = COLLECT(

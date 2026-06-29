@@ -40,12 +40,12 @@ class EggManWindow(QWidget):
     SCREENSHOT_DIR = SCREENSHOTS_FOLDER
     EXPORTS_DIR = EXPORTS_FOLDER
 
-    def __init__(self):
+    def __init__(self, services: AppContainer = None):
         super().__init__()
         self.setWindowTitle(WINDOW_TITLE)
         self._apply_window_icon()
 
-        self._services = AppContainer()
+        self._services = services or AppContainer()
         self._config = self._services.config_manager
         self._logger = self._services.logger
         self._settings = self._services.settings_manager
@@ -452,9 +452,38 @@ def create_application(argv: list[str]) -> QApplication:
 
 def main() -> int:
     app = create_application(sys.argv)
-    window = EggManWindow()
-    window.show()
-    window._logger.info("Qt application entering event loop")
+    
+    # 1. Create and show loading screen
+    from ui.loading import LoadingScreen, AppInitWorker
+    loading_screen = LoadingScreen()
+    loading_screen.show()
+
+    # 2. Start initialization in a background worker thread
+    worker = AppInitWorker()
+
+    # Placeholders to hold window reference
+    window = None
+
+    def on_init_finished(result):
+        nonlocal window
+        if isinstance(result, Exception):
+            import traceback
+            traceback.print_exception(type(result), result, result.__traceback__)
+            sys.exit(1)
+        else:
+            # 3. Create main window with pre-initialized services
+            window = EggManWindow(services=result)
+            # 4. Smooth transition: close loading and show main window
+            loading_screen.close()
+            window.show()
+            window._logger.info("Main window initialized and shown after loading")
+
+    worker.finished.connect(on_init_finished)
+    worker.start()
+
+    # Keep a reference to the worker on the app object to prevent garbage collection
+    app.worker = worker
+
     return app.exec()
 
 
