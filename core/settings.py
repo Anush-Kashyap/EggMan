@@ -38,8 +38,8 @@ class SettingsManager:
         except OSError:
             pass
 
-    def get(self, key: str):
-        return self._data.get(key, self._DEFAULTS.get(key))
+    def get(self, key: str, default=None):
+        return self._data.get(key, self._DEFAULTS.get(key, default))
 
     def set(self, key: str, value):
         self._data[key] = value

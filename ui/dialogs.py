@@ -1,3 +1,5 @@
+from __future__ import annotations
+from typing import List, Any, Optional
 from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont, QDragEnterEvent, QDropEvent
 from PySide6.QtWidgets import (
@@ -15,6 +17,10 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
     QFileDialog,
+    QTabWidget,
+    QListWidget,
+    QSplitter,
+    QGridLayout,
 )
 from datetime import datetime
 from pathlib import Path
@@ -846,3 +852,409 @@ class KnowledgeBaseWindow(QDialog):
             return f"{size_bytes / 1024:.1f} KB"
         else:
             return f"{size_bytes / (1024 * 1024):.1f} MB"
+
+
+class ToastLabel(QLabel):
+    """Auto-dismissing borderless toast alert for developer state notifications."""
+
+    def __init__(self, text: str, parent=None):
+        super().__init__(text, parent)
+        self.setWindowFlags(Qt.ToolTip | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setStyleSheet(f"""
+            QLabel {{
+                background-color: rgba(30, 30, 30, 0.94);
+                color: #ffffff;
+                border: 1px solid #555555;
+                border-radius: 12px;
+                padding: 8px 16px;
+                font-family: 'Segoe UI';
+                font-size: 11px;
+                font-weight: bold;
+            }}
+        """)
+        self.setAlignment(Qt.AlignCenter)
+        self.adjustSize()
+        
+        # Center toast relative to parent window if available
+        if parent:
+            geo = parent.geometry()
+            cx = geo.x() + (geo.width() - self.width()) // 2
+            cy = geo.y() + (geo.height() - self.height()) // 2
+            self.move(cx, cy)
+        else:
+            # Default to top-center of active screen
+            screen = QApplication.primaryScreen()
+            if screen:
+                geom = screen.geometry()
+                self.move((geom.width() - self.width()) // 2, 100)
+        
+        # Auto-close timer
+        QTimer.singleShot(2000, self.close)
+
+
+class EggInspectorWindow(QDialog):
+    """Developer-only diagnostics and performance profiling dashboard."""
+
+    def __init__(self, services, parent=None) -> None:
+        super().__init__(parent)
+        self._services = services
+        self.setWindowTitle("Egg Inspector - Developer Diagnostics")
+        self.setMinimumSize(750, 520)
+        self.resize(850, 580)
+        self.setStyleSheet(f"background-color: {Theme.CREAM}; color: {Theme.TEXT_DARK};")
+
+        self._build_ui()
+
+        # Polling/Refresh timer for status updates & profiling history
+        self._timer = QTimer(self)
+        self._timer.setInterval(1000)
+        self._timer.timeout.connect(self._on_tick)
+        self._timer.start()
+
+        self._last_history_len = -1
+        self._on_tick()
+
+    def _build_ui(self) -> None:
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(12, 12, 12, 12)
+        main_layout.setSpacing(10)
+
+        # 1. Tab Widget
+        self.tabs = QTabWidget()
+        self.tabs.setStyleSheet(f"""
+            QTabWidget::panel {{
+                border: 1px solid {Theme.BORDER};
+                background: {Theme.CREAM};
+                border-radius: 6px;
+            }}
+            QTabBar::tab {{
+                background: {Theme.CREAM_DARK};
+                color: {Theme.TEXT_MID};
+                border: 1px solid {Theme.BORDER};
+                border-bottom: none;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+                padding: 6px 12px;
+                font-family: 'Segoe UI';
+                font-size: 11px;
+            }}
+            QTabBar::tab:selected, QTabBar::tab:hover {{
+                background: {Theme.CREAM};
+                color: {Theme.TEXT_DARK};
+                font-weight: bold;
+            }}
+        """)
+        main_layout.addWidget(self.tabs, stretch=1)
+
+        # Initialize Tabs
+        self._init_performance_tab()
+        self._init_placeholder_tabs()
+
+        # 2. Status Bar live panel at bottom
+        self._build_status_panel()
+        main_layout.addWidget(self.status_panel)
+
+    def _init_performance_tab(self) -> None:
+        perf_widget = QWidget()
+        layout = QHBoxLayout(perf_widget)
+        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setSpacing(10)
+
+        # Left Column: Request List Splitter
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(6)
+
+        list_title = QLabel("Recent Requests:")
+        list_title.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        left_layout.addWidget(list_title)
+
+        self.req_list = QListWidget()
+        self.req_list.setFont(QFont("Segoe UI", 9))
+        self.req_list.setStyleSheet(f"""
+            QListWidget {{
+                border: 1px solid {Theme.BORDER};
+                background: {Theme.CREAM_DARK};
+                border-radius: 6px;
+                padding: 4px;
+            }}
+            QListWidget::item {{
+                padding: 6px;
+                border-bottom: 1px solid {Theme.BORDER};
+                border-radius: 4px;
+            }}
+            QListWidget::item:hover {{
+                background: {Theme.BTN_HOVER};
+            }}
+            QListWidget::item:selected {{
+                background: {Theme.BTN_BG};
+                color: {Theme.TEXT_DARK};
+                font-weight: bold;
+            }}
+        """)
+        self.req_list.itemSelectionChanged.connect(self._on_request_selected)
+        left_layout.addWidget(self.req_list)
+
+        # Right Column: Timing details
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+        right_layout.setContentsMargins(0, 0, 0, 0)
+        right_layout.setSpacing(8)
+
+        details_title = QLabel("Stage Timings:")
+        details_title.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        right_layout.addWidget(details_title)
+
+        self.details_scroll = QScrollArea()
+        self.details_scroll.setWidgetResizable(True)
+        self.details_scroll.setStyleSheet(f"border: 1px solid {Theme.BORDER}; border-radius: 6px; background: {Theme.CREAM_DARK};")
+
+        scroll_content = QWidget()
+        scroll_content.setStyleSheet("background: transparent;")
+        self.details_grid = QGridLayout(scroll_content)
+        self.details_grid.setContentsMargins(12, 12, 12, 12)
+        self.details_grid.setVerticalSpacing(8)
+        self.details_grid.setHorizontalSpacing(20)
+
+        self.details_scroll.setWidget(scroll_content)
+        right_layout.addWidget(self.details_scroll)
+
+        # Assemble Splitter
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([300, 450])
+        layout.addWidget(splitter)
+
+        self.tabs.addTab(perf_widget, "📊 Performance")
+
+    def _init_placeholder_tabs(self) -> None:
+        placeholder_tabs = [
+            ("🧠 Context", "Context Dashboard Coming Soon\n\nReserved for Future Development"),
+            ("💾 Memory", "Memory Graph Visualizer Coming Soon\n\nReserved for Future Development"),
+            ("🛠 Tools", "Tool Execution Inspector Coming Soon\n\nReserved for Future Development"),
+            ("🎤 Voice", "Voice Synthesis Diagnostic Panel Coming Soon\n\nReserved for Future Development"),
+            ("👁 Vision", "Vision Token Calculator Coming Soon\n\nReserved for Future Development"),
+            ("📜 Logs", "Log Stream Aggregator Coming Soon\n\nReserved for Future Development"),
+        ]
+        for name, text in placeholder_tabs:
+            widget = QWidget()
+            layout = QVBoxLayout(widget)
+            layout.setContentsMargins(20, 20, 20, 20)
+            lbl = QLabel(text)
+            lbl.setFont(QFont("Segoe UI", 11))
+            lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
+            lbl.setAlignment(Qt.AlignCenter)
+            lbl.setWordWrap(True)
+            layout.addWidget(lbl)
+            self.tabs.addTab(widget, name)
+
+    def _build_status_panel(self) -> None:
+        self.status_panel = QFrame()
+        self.status_panel.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
+        self.status_panel.setStyleSheet(f"""
+            QFrame {{
+                background-color: {Theme.CREAM_DARK};
+                border: 1px solid {Theme.BORDER};
+                border-radius: 6px;
+                padding: 6px;
+            }}
+            QLabel {{
+                font-family: 'Segoe UI';
+                font-size: 10px;
+                color: {Theme.TEXT_MID};
+            }}
+        """)
+        grid = QGridLayout(self.status_panel)
+        grid.setContentsMargins(6, 6, 6, 6)
+        grid.setSpacing(8)
+
+        self.status_labels = {
+            "ollama": QLabel("Ollama: Loading..."),
+            "chat_model": QLabel("Chat Model: Loading..."),
+            "vision_model": QLabel("Vision Model: Loading..."),
+            "avg_resp": QLabel("Avg Response: Loading..."),
+            "avg_token": QLabel("Avg First Token: Loading..."),
+            "dev_status": QLabel("Developer Mode: Loading..."),
+            "gpu": QLabel("GPU: Loading..."),
+            "vram": QLabel("VRAM: Loading...")
+        }
+
+        grid.addWidget(self.status_labels["ollama"], 0, 0)
+        grid.addWidget(self.status_labels["chat_model"], 0, 1)
+        grid.addWidget(self.status_labels["vision_model"], 0, 2)
+        grid.addWidget(self.status_labels["dev_status"], 0, 3)
+
+        grid.addWidget(self.status_labels["gpu"], 1, 0)
+        grid.addWidget(self.status_labels["vram"], 1, 1)
+        grid.addWidget(self.status_labels["avg_resp"], 1, 2)
+        grid.addWidget(self.status_labels["avg_token"], 1, 3)
+
+    def _on_tick(self) -> None:
+        """Periodic UI updates for status stats and new requests history."""
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        
+        with profiler._history_lock:
+            current_len = len(profiler.history)
+            if current_len != self._last_history_len:
+                self._last_history_len = current_len
+                self._refresh_request_list(profiler.history)
+
+        from backend.session.session_manager import SessionManager
+        session = SessionManager.get_instance().context
+        
+        dev_text = "ENABLED 🛠" if session.developer_mode else "DISABLED"
+        self.status_labels["dev_status"].setText(f"Developer Mode: {dev_text}")
+        
+        provider_name = session.active_provider or "Unknown"
+        self.status_labels["ollama"].setText(f"Ollama: {provider_name.capitalize()}")
+        self.status_labels["chat_model"].setText(f"Chat Model: {session.active_chat_model or 'qwen3:8b'}")
+        self.status_labels["vision_model"].setText(f"Vision Model: {session.active_vision_model or 'qwen2.5vl:7b'}")
+
+        with profiler._history_lock:
+            total_requests = len(profiler.history)
+            if total_requests > 0:
+                avg_total = sum(p.total_time for p in profiler.history) / total_requests
+                self.status_labels["avg_resp"].setText(f"Avg Response: {avg_total:.2f} s")
+
+                first_token_sum = 0.0
+                first_token_count = 0
+                for p in profiler.history:
+                    token_time = p.stages.get("Ollama First Token") or p.stages.get("Vision Processing")
+                    if token_time is not None:
+                        first_token_sum += token_time
+                        first_token_count += 1
+                
+                if first_token_count > 0:
+                    avg_ft = first_token_sum / first_token_count
+                    self.status_labels["avg_token"].setText(f"Avg First Token: {avg_ft:.2f} s")
+                else:
+                    self.status_labels["avg_token"].setText("Avg First Token: N/A")
+            else:
+                self.status_labels["avg_resp"].setText("Avg Response: N/A")
+                self.status_labels["avg_token"].setText("Avg First Token: N/A")
+
+        if not hasattr(self, "_gpu_name"):
+            self._gpu_name, self._vram = profiler.get_gpu_diagnostics()
+        
+        self.status_labels["gpu"].setText(f"GPU: {self._gpu_name}")
+        self.status_labels["vram"].setText(f"VRAM: {self._vram}")
+
+    def _refresh_request_list(self, history: List[RequestProfile]) -> None:
+        """Repopulate the request list widget (chronologically descending)."""
+        current_selection = self.req_list.currentRow()
+        self.req_list.clear()
+        
+        for profile in reversed(history):
+            title = f"#{profile.request_num} - {profile.user_message[:20]}... ({profile.total_time:.2f}s)"
+            self.req_list.addItem(title)
+
+        if current_selection >= 0 and current_selection < self.req_list.count():
+            self.req_list.setCurrentRow(current_selection)
+
+    def _on_request_selected(self) -> None:
+        """Handle request selection changes to update timing details list."""
+        old_widget = self.details_scroll.takeWidget()
+        if old_widget:
+            old_widget.deleteLater()
+
+        selected_row = self.req_list.currentRow()
+        if selected_row < 0:
+            return
+
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        
+        with profiler._history_lock:
+            if selected_row < len(profiler.history):
+                profile = profiler.history[len(profiler.history) - 1 - selected_row]
+            else:
+                return
+
+        scroll_content = QWidget()
+        scroll_content.setStyleSheet("background: transparent;")
+        main_layout = QVBoxLayout(scroll_content)
+        main_layout.setContentsMargins(12, 12, 12, 12)
+        main_layout.setSpacing(12)
+
+        meta_layout = QHBoxLayout()
+        meta_layout.setSpacing(10)
+        
+        def make_flag_label(name: str, active: bool) -> QLabel:
+            lbl = QLabel(f"{name}: {'✅' if active else '❌'}")
+            lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            return lbl
+
+        meta_layout.addWidget(make_flag_label("Memory", profile.memory_used))
+        meta_layout.addWidget(make_flag_label("Knowledge", profile.knowledge_used))
+        meta_layout.addWidget(make_flag_label("Vision", profile.vision_used))
+        meta_layout.addWidget(make_flag_label("Tools", profile.tools_executed))
+        
+        main_layout.addLayout(meta_layout)
+
+        grid_widget = QWidget()
+        grid_layout = QGridLayout(grid_widget)
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        grid_layout.setVerticalSpacing(8)
+        grid_layout.setHorizontalSpacing(20)
+
+        stages_display = [
+            ("Speech-to-Text", "Speech-to-Text"),
+            ("Prompt Builder", "Prompt Builder"),
+            ("Memory Retrieval", "Memory Retrieval"),
+            ("Knowledge Retrieval", "Knowledge Retrieval"),
+            ("Tool Execution", "Tool Execution"),
+            ("Vision Processing", "Vision Processing"),
+            ("Ollama First Token", "Ollama First Token"),
+            ("Response Generation", "Response Generation"),
+            ("Streaming", "Streaming"),
+        ]
+
+        row = 0
+        for display_name, stage_key in stages_display:
+            val = profile.stages.get(stage_key)
+            if val is not None:
+                name_lbl = QLabel(display_name)
+                name_lbl.setFont(QFont("Segoe UI", 9))
+                name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+                
+                val_lbl = QLabel(f"{val:.2f} s")
+                val_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+                val_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+                val_lbl.setAlignment(Qt.AlignRight)
+
+                grid_layout.addWidget(name_lbl, row, 0)
+                grid_layout.addWidget(val_lbl, row, 1)
+                row += 1
+
+        main_layout.addWidget(grid_widget)
+
+        divider = QFrame()
+        divider.setFrameShape(QFrame.HLine)
+        divider.setStyleSheet(f"background-color: {Theme.BORDER};")
+        main_layout.addWidget(divider)
+
+        total_layout = QHBoxLayout()
+        total_lbl = QLabel("Total Execution Time")
+        total_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        total_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+
+        total_val = QLabel(f"{profile.total_time:.2f} s")
+        total_val.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        total_val.setStyleSheet(f"color: #4CAF50;")
+        total_val.setAlignment(Qt.AlignRight)
+
+        total_layout.addWidget(total_lbl)
+        total_layout.addStretch()
+        total_layout.addWidget(total_val)
+        main_layout.addLayout(total_layout)
+
+        # Add vertical stretch at the end of the layout so elements stay aligned to the top
+        # and trigger scrolling when content height exceeds viewport height.
+        main_layout.addStretch()
+
+        self.details_scroll.setWidget(scroll_content)

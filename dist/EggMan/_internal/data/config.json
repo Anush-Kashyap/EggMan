@@ -6,5 +6,7 @@
   "ollama_base_url": "http://localhost:11434",
   "ollama_model": "qwen3:8b",
   "voice_whisper_model": "base",
-  "wake_word_enabled": true
+  "wake_word_enabled": true,
+  "wake_word_name": "alexa",
+  "wake_word_threshold": 0.5
 }

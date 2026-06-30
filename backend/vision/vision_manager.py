@@ -29,6 +29,7 @@ class FloatingPreviewWidget(QWidget):
     def __init__(self, image_bytes: bytes, parent=None) -> None:
         super().__init__(parent, Qt.Window | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus)
         self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.setAttribute(Qt.WA_QuitOnClose, False)
 
         # Outer layout
         layout = QVBoxLayout(self)
@@ -190,7 +191,10 @@ class VisionManager(QObject):
             logger.error("Vision error: ScreenshotSource is not registered")
             return None
 
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        PerformanceProfiler.get_instance().start_stage("Screenshot Capture")
         img_bytes = source.capture()
+        PerformanceProfiler.get_instance().stop_stage("Screenshot Capture")
         if not img_bytes:
             return None
 

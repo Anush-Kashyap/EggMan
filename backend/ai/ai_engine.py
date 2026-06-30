@@ -64,6 +64,11 @@ class AIEngine:
     def generate(self, request: AIRequest) -> AIResponse:
         """Generate a full-text response from the active provider."""
         start = time.perf_counter()
+        
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        profile = profiler.start_request(request.user_message)
+        
         self._logger.info(
             "AI request received provider=%s message_len=%d",
             self._provider_registry.active_provider_name(),
@@ -79,10 +84,18 @@ class AIEngine:
         routed_response = self._route_tool_request(request)
         if routed_response is not None:
             session.last_ai_message = routed_response.response_text
+            profiler.finalize_request(
+                model_name="ToolRouter",
+                memory_used=profile.memory_used if profile else False,
+                knowledge_used=profile.knowledge_used if profile else False,
+                vision_used=profile.vision_used if profile else False,
+                tools_executed=profile.tools_executed if profile else False
+            )
             return routed_response
 
         provider = self._resolve_provider()
         if provider is None:
+            profiler.finalize_request(model_name="Error")
             return AIResponse(error="No active provider available")
 
         prompt_payload = self._build_request_with_context(request)
@@ -100,9 +113,19 @@ class AIEngine:
                 self._trigger_memory(prompt_payload)
                 session.active_chat_model = response.model_name
                 session.last_ai_message = response.response_text
+            
+            # Finalize profiling
+            profiler.finalize_request(
+                model_name=response.model_name or provider.model_name or "Unknown",
+                memory_used=profile.memory_used if profile else False,
+                knowledge_used=profile.knowledge_used if profile else False,
+                vision_used=profile.vision_used if profile else False,
+                tools_executed=profile.tools_executed if profile else False
+            )
             return response
         except Exception as exc:
             self._logger.exception("AI generation failed: %s", exc)
+            profiler.finalize_request(model_name="Error")
             return AIResponse(error=str(exc), provider_name=provider.provider_name)
 
     def stream(self, request: AIRequest) -> StreamingResponse:
@@ -111,13 +134,33 @@ class AIEngine:
         if provider is None:
             return StreamingResponse(chunks=["Error: no provider available"])
 
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        profile = profiler.start_request(request.user_message)
+
         prompt_payload = self._build_request_with_context(request)
         self._logger.info("AIEngine initiating stream")
         try:
-            return provider.stream(prompt_payload)
+            original_stream = provider.stream(prompt_payload)
+            return StreamingResponse(chunks=self._wrap_stream(original_stream, profiler))
         except Exception as exc:
             self._logger.error(f"AI stream failed: {exc}")
+            profiler.finalize_request(model_name="Error")
             return StreamingResponse(chunks=[f"Error: {exc}"])
+
+    def _wrap_stream(self, original_stream: Any, profiler: PerformanceProfiler) -> Iterable[str]:
+        profile = profiler.get_current_profile()
+        try:
+            for chunk in original_stream.chunks:
+                yield chunk
+        finally:
+            profiler.finalize_request(
+                model_name=getattr(original_stream, "model_name", None) or "Unknown",
+                memory_used=profile.memory_used if profile else False,
+                knowledge_used=profile.knowledge_used if profile else False,
+                vision_used=profile.vision_used if profile else False,
+                tools_executed=profile.tools_executed if profile else False
+            )
 
     def _build_request_with_context(self, request: AIRequest) -> AIRequest:
         start = time.perf_counter()
@@ -155,9 +198,18 @@ class AIEngine:
         if self._tool_router is None or not request.user_message:
             return None
 
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        profiler.start_stage("Tool Execution")
         route_result = self._tool_router.route(request.user_message)
+        profiler.stop_stage("Tool Execution")
+
         if not route_result.handled:
             return None
+
+        profile = profiler.get_current_profile()
+        if profile:
+            profile.tools_executed = True
 
         self._logger.info("AIEngine short-circuited request with tool=%s", route_result.tool_name)
         return AIResponse(

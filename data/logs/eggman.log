@@ -20797,3 +20797,86 @@ ValueError: Unknown application: capcut. Registered applications: chrome, notepa
 2026-06-29 16:01:54,271 | INFO | Detector confidence score: 0.000002
 2026-06-29 16:01:54,286 | INFO | Wake word system stopped
 2026-06-29 16:01:54,288 | INFO | Application shutdown
+2026-06-30 19:34:24,608 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-06-30 19:34:24,632 | INFO | Task Scheduler started
+2026-06-30 19:34:24,633 | INFO | Schedule loaded: count=0
+2026-06-30 19:34:24,775 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-06-30 19:34:26,636 | INFO | Schedule loaded: count=0
+2026-06-30 19:34:26,859 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:34:26,859 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-06-30 19:34:28,638 | INFO | Schedule loaded: count=0
+2026-06-30 19:34:28,933 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:34:28,933 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2074.0
+2026-06-30 19:34:28,933 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2074.1
+2026-06-30 19:34:28,933 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-06-30 19:34:28,933 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-06-30 19:34:28,939 | INFO | SessionContext: session created
+2026-06-30 19:34:28,939 | INFO | VoiceManager initialized sample_rate=16000
+2026-06-30 19:34:28,949 | INFO | VisionManager: Registered image source: screenshot
+2026-06-30 19:34:28,950 | INFO | Application services initialized
+2026-06-30 19:35:07,951 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-06-30 19:35:07,960 | INFO | Task Scheduler started
+2026-06-30 19:35:07,961 | INFO | Schedule loaded: count=0
+2026-06-30 19:35:08,108 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-06-30 19:35:09,963 | INFO | Schedule loaded: count=0
+2026-06-30 19:35:10,154 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:35:10,154 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-06-30 19:35:11,964 | INFO | Schedule loaded: count=0
+2026-06-30 19:35:12,220 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:35:12,220 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2066.1
+2026-06-30 19:35:12,220 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2066.1
+2026-06-30 19:35:12,220 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-06-30 19:35:12,220 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-06-30 19:35:12,228 | INFO | SessionContext: session created
+2026-06-30 19:35:12,228 | INFO | VoiceManager initialized sample_rate=16000
+2026-06-30 19:35:12,239 | INFO | VisionManager: Registered image source: screenshot
+2026-06-30 19:35:12,240 | INFO | Application services initialized
+2026-06-30 19:36:10,849 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-06-30 19:36:10,857 | INFO | Task Scheduler started
+2026-06-30 19:36:10,858 | INFO | Schedule loaded: count=0
+2026-06-30 19:36:10,982 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-06-30 19:36:12,860 | INFO | Schedule loaded: count=0
+2026-06-30 19:36:13,049 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:36:13,049 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-06-30 19:36:14,862 | INFO | Schedule loaded: count=0
+2026-06-30 19:36:15,091 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:36:15,091 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2041.9
+2026-06-30 19:36:15,091 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2042.0
+2026-06-30 19:36:15,091 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-06-30 19:36:15,091 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-06-30 19:36:15,096 | INFO | SessionContext: session created
+2026-06-30 19:36:15,097 | INFO | VoiceManager initialized sample_rate=16000
+2026-06-30 19:36:15,108 | INFO | VisionManager: Registered image source: screenshot
+2026-06-30 19:36:15,108 | INFO | Application services initialized
+2026-06-30 19:36:15,111 | INFO | Application startup
+2026-06-30 19:37:02,252 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-06-30 19:37:02,262 | INFO | Task Scheduler started
+2026-06-30 19:37:02,263 | INFO | Schedule loaded: count=0
+2026-06-30 19:37:02,391 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-06-30 19:37:04,265 | INFO | Schedule loaded: count=0
+2026-06-30 19:37:04,438 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:37:04,438 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-06-30 19:37:06,267 | INFO | Schedule loaded: count=0
+2026-06-30 19:37:06,476 | INFO | Ollama model selected=qwen3:8b (default)
+2026-06-30 19:37:06,476 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2037.4
+2026-06-30 19:37:06,476 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2037.5
+2026-06-30 19:37:06,476 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-06-30 19:37:06,476 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-06-30 19:37:06,481 | INFO | SessionContext: session created
+2026-06-30 19:37:06,481 | INFO | VoiceManager initialized sample_rate=16000
+2026-06-30 19:37:06,492 | INFO | VisionManager: Registered image source: screenshot
+2026-06-30 19:37:06,492 | INFO | Application services initialized
+2026-06-30 19:37:06,494 | INFO | Application startup
+2026-06-30 19:37:07,552 | INFO | Voice initialization
+2026-06-30 19:37:07,614 | INFO | Desktop companion initialized and shown on startup
+2026-06-30 19:37:08,055 | INFO | SessionContext: State updated - wake_word_enabled updated from False to True
+2026-06-30 19:37:08,056 | INFO | Wake-word service started
+2026-06-30 19:37:08,268 | INFO | Schedule loaded: count=0
+2026-06-30 19:37:09,935 | DEBUG | VoiceManager state=idle
+2026-06-30 19:37:10,271 | INFO | Schedule loaded: count=0
+2026-06-30 19:37:11,949 | INFO | SessionContext: State updated - wake_word_enabled updated from True to False
+2026-06-30 19:37:11,949 | INFO | Wake word system stopped
+2026-06-30 19:37:12,194 | INFO | Loading built-in 'alexa' wake word model.
+2026-06-30 19:37:12,272 | INFO | Task Scheduler stopped
+2026-06-30 19:37:12,272 | INFO | ChatWindow shutdown
+2026-06-30 19:37:12,359 | INFO | Detector initialized threshold=0.50

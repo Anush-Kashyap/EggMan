@@ -60,6 +60,11 @@ class ChatWindow(QWidget):
         self._memory_manager = self._services.memory_manager
         self._memory_extractor = self._services.memory_extractor
         self._voice = self._services.voice_manager
+        
+        # Load Developer Mode from settings
+        dev_mode = bool(self._settings.get("developer_mode", False))
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.developer_mode = dev_mode
         self._theme_mgr = ThemeManager(on_theme_changed=self.apply_theme)
 
         self._pending_reply: str = ""
@@ -160,7 +165,30 @@ class ChatWindow(QWidget):
         """)
         self.calendar_btn.clicked.connect(self._open_schedule)
 
+        self.bug_btn = QPushButton("🐞")
+        self.bug_btn.setFixedSize(28, 28)
+        self.bug_btn.setFont(QFont("Segoe UI", 12))
+        self.bug_btn.setCursor(Qt.PointingHandCursor)
+        self.bug_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background: rgba(0, 0, 0, 0.06);
+                border-radius: 6px;
+            }
+            QPushButton:pressed {
+                background: rgba(0, 0, 0, 0.10);
+                border-radius: 6px;
+            }
+        """)
+        self.bug_btn.clicked.connect(self._open_egg_inspector)
+        from backend.session.session_manager import SessionManager
+        self.bug_btn.setVisible(SessionManager.get_instance().context.developer_mode)
+
         bottom_layout.addWidget(self.calendar_btn)
+        bottom_layout.addWidget(self.bug_btn)
         bottom_layout.addStretch()
 
         root_layout = QVBoxLayout(self._container)
@@ -253,6 +281,8 @@ class ChatWindow(QWidget):
         text = self._input_bar.entry.text().strip()
         if not text:
             return
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.temporary_context["voice_mode"] = False
         self._input_bar.entry.clear()
         self._submit_message(text)
 
@@ -299,6 +329,8 @@ class ChatWindow(QWidget):
     @Slot(str)
     def _on_voice_text(self, text: str):
         self._logger.info("UI voice transcription ready len=%d", len(text))
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.temporary_context["voice_mode"] = True
         self._input_bar.entry.clear()
         self._submit_message(text)
 
@@ -327,7 +359,9 @@ class ChatWindow(QWidget):
         start = perf_counter()
         self._logger.debug("AI worker entering _fetch_reply")
         try:
-            reply = self._conv.get_reply(user_message, images=images)
+            history_list = self._chat.get_history()
+            history_tuples = [(sender, text) for sender, text, ts in history_list]
+            reply = self._conv.get_reply(user_message, images=images, history=history_tuples)
             self._logger.debug(
                 "AI worker received reply in %.1fms len=%d",
                 (perf_counter() - start) * 1000,
@@ -364,6 +398,9 @@ class ChatWindow(QWidget):
 
         elif result.action == "file":
             self._open_knowledge_base()
+
+        elif result.action == "dev":
+            self._toggle_developer_mode()
 
         elif result.action.startswith("theme_"):
             theme_name = result.action.split("_", 1)[1]
@@ -499,6 +536,35 @@ class ChatWindow(QWidget):
             parent=self,
         )
         dialog.exec()
+
+    def _open_egg_inspector(self):
+        from ui.dialogs import EggInspectorWindow
+        dialog = EggInspectorWindow(
+            services=self._services,
+            parent=self,
+        )
+        dialog.exec()
+
+    def _toggle_developer_mode(self):
+        from backend.session.session_manager import SessionManager
+        ctx = SessionManager.get_instance().context
+        new_val = not ctx.developer_mode
+        ctx.developer_mode = new_val
+        self._settings.set("developer_mode", new_val)
+        self._settings.save()
+        self._config.set("developer_mode", new_val)
+        self._config.save()
+        
+        status_text = "Enabled" if new_val else "Disabled"
+        self._show_toast(f"🛠 Developer Mode {status_text}")
+        
+        if hasattr(self, "bug_btn"):
+            self.bug_btn.setVisible(new_val)
+
+    def _show_toast(self, text: str):
+        from ui.dialogs import ToastLabel
+        toast = ToastLabel(text, self)
+        toast.show()
 
     def _on_schedule_trigger_from_thread(self, message: str) -> None:
         """Called from the scheduler background thread — emit a signal to cross into the Qt main thread."""

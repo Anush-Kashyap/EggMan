@@ -33,6 +33,9 @@ class CommandHandler:
         if cmd == "/file":
             return CommandResult(handled=True, action="file")
 
+        if cmd == "/dev":
+            return CommandResult(handled=True, action="dev")
+
         if cmd == "/clear":
             return CommandResult(handled=True, action="clear")
 

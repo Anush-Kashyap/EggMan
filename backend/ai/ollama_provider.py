@@ -85,6 +85,7 @@ class OllamaProvider(BaseProvider):
             self._logger.info("Vision model selected")
         else:
             model = request.model_name or self._model_name
+        is_vision = (model == "qwen2.5vl:7b")
 
         self._logger.info("Ollama generate request model=%s message_len=%d", model, len(request.user_message or ""))
         payload = {
@@ -95,13 +96,27 @@ class OllamaProvider(BaseProvider):
         if getattr(request, "images", None):
             payload["images"] = request.images
 
-        if model == "qwen2.5vl:7b":
-            self._logger.info("Vision request sent")
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        
+        if is_vision:
+            profiler.start_stage("Vision Processing")
+        else:
+            profiler.start_stage("Ollama First Token")
 
         try:
             data = self._post_json("/api/generate", payload, timeout=120)
             if "error" in data:
                 raise RuntimeError(str(data["error"]))
+            
+            if is_vision:
+                profiler.stop_stage("Vision Processing")
+            else:
+                profiler.stop_stage("Ollama First Token")
+                # For non-streaming, count generation time as first token time
+                profiler.start_stage("Response Generation")
+                profiler.stop_stage("Response Generation")
+
             text = str(data.get("response", "")).strip()
             elapsed_ms = (time.perf_counter() - start) * 1000
 
@@ -152,10 +167,31 @@ class OllamaProvider(BaseProvider):
     def _stream_chunks(self, payload: dict[str, Any], start: float) -> Iterable[str]:
         model = payload["model"]
         is_vision = (model == "qwen2.5vl:7b")
+        
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        first_token = True
+        
+        if is_vision:
+            profiler.start_stage("Vision Processing")
+        else:
+            profiler.start_stage("Ollama First Token")
+            
         try:
             for data in self._post_stream("/api/generate", payload, timeout=120):
                 if "error" in data:
                     raise RuntimeError(str(data["error"]))
+                
+                # Stop first token stage when first text arrives
+                if first_token:
+                    first_token = False
+                    if is_vision:
+                        profiler.stop_stage("Vision Processing")
+                        profiler.start_stage("Streaming")
+                    else:
+                        profiler.stop_stage("Ollama First Token")
+                        profiler.start_stage("Response Generation")
+                
                 text = data.get("response", "")
                 if text:
                     yield str(text)
@@ -164,10 +200,18 @@ class OllamaProvider(BaseProvider):
                     if is_vision:
                         self._logger.info("Vision response received")
                         self._logger.info("Request duration: %.1fms", elapsed_ms)
+                        profiler.stop_stage("Streaming")
                     else:
                         self._logger.info("Ollama stream completed model=%s elapsed_ms=%.1f", model, elapsed_ms)
+                        profiler.stop_stage("Response Generation")
                     break
         except Exception as exc:
+            if is_vision:
+                profiler.stop_stage("Vision Processing")
+                profiler.stop_stage("Streaming")
+            else:
+                profiler.stop_stage("Ollama First Token")
+                profiler.stop_stage("Response Generation")
             elapsed_ms = (time.perf_counter() - start) * 1000
             self._logger.error("Ollama stream failed model=%s elapsed_ms=%.1f error=%s", model, elapsed_ms, exc)
             yield self._friendly_error(exc, model)

@@ -55,10 +55,20 @@ class MemoryManager:
 
     def retrieve_relevant_memories(self, query: str, limit: int = 10) -> List[MemoryRecord]:
         memories = self.get_all_memories()
-        if len(memories) <= limit:
-            selected = memories
-        else:
-            selected = self._rank_memories(query, memories)[:limit]
+        
+        # Rank all memories
+        ranked = self._rank_memories(query, memories)
+        
+        # Filter memories: only keep those that have at least some keyword overlap (overlap > 0)
+        query_tokens = self._tokens(query)
+        selected = []
+        for m in ranked:
+            m_tokens = self._tokens(f"{m.key} {m.value} {m.category.value}")
+            if len(query_tokens & m_tokens) > 0:
+                selected.append(m)
+                
+        # Limit to the requested size
+        selected = selected[:limit]
 
         self._repository.mark_accessed(selected)
         self._logger.info("Memory retrieved count=%d query=%r", len(selected), query)

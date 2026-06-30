@@ -137,13 +137,25 @@ class VoiceManager:
                 self._set_state(VoiceState.IDLE)
                 return
 
+            from backend.profiler.performance_profiler import PerformanceProfiler
+            profiler = PerformanceProfiler.get_instance()
+            profile = profiler.start_request("<Voice Transcription>")
+            if profile:
+                profiler.start_stage("Speech-to-Text")
+
             self._set_state(VoiceState.PROCESSING)
             transcribe_start = time.perf_counter()
             text = self._speech.transcribe(audio, sample_rate=self._speech.sample_rate)
             transcribe_ms = (time.perf_counter() - transcribe_start) * 1000
             logger.info("VoiceManager transcription finished elapsed_ms=%.1f text_len=%d", transcribe_ms, len(text))
 
+            if profile:
+                profiler.stop_stage("Speech-to-Text")
+                profiler._pending_voice_profile = profile
+
             if not text:
+                if profile:
+                    profiler._pending_voice_profile = None
                 self._emit_error("I couldn't understand that. Please try again.")
                 self._set_state(VoiceState.IDLE)
                 return
@@ -154,6 +166,8 @@ class VoiceManager:
                 self._on_transcription(normalized)
             self._set_state(VoiceState.IDLE)
         except Exception as exc:
+            if "profiler" in locals() and profile:
+                profiler._pending_voice_profile = None
             logger.exception("VoiceManager record/transcribe failed: %s", exc)
             self._emit_error(self._friendly_error(exc))
             self._set_state(VoiceState.IDLE)
