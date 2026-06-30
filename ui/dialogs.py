@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Any, Optional
-from PySide6.QtCore import Qt, Signal, QTimer
-from PySide6.QtGui import QFont, QDragEnterEvent, QDropEvent
+from PySide6.QtCore import Qt, Signal, QTimer, QRect, QPoint, QSize
+from PySide6.QtGui import QFont, QDragEnterEvent, QDropEvent, QPainter, QColor, QBrush
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
@@ -893,6 +893,81 @@ class ToastLabel(QLabel):
         QTimer.singleShot(2000, self.close)
 
 
+class StackedTokenBar(QWidget):
+    """Visual horizontal stacked progress bar representing prompt tokens breakdown."""
+
+    def __init__(self, system: int, user: int, history: int, parent=None):
+        super().__init__(parent)
+        self.system = system
+        self.user = user
+        self.history = history
+        self.setFixedHeight(12)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        total = self.system + self.user + self.history
+        if total == 0:
+            # Draw gray placeholder if no tokens
+            painter.setBrush(QBrush(QColor("#D0D0D0")))
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(self.rect(), 4, 4)
+            return
+
+        w_sys = int((self.system / total) * self.width())
+        w_usr = int((self.user / total) * self.width())
+        w_his = self.width() - w_sys - w_usr
+
+        # System: Purple
+        painter.setBrush(QBrush(QColor("#8A2BE2")))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(QRect(0, 0, w_sys + 4, self.height()), 4, 4)
+
+        # User: Blue
+        painter.setBrush(QBrush(QColor("#1E90FF")))
+        painter.drawRect(QRect(w_sys, 0, w_usr, self.height()))
+
+        # History: SeaGreen
+        painter.setBrush(QBrush(QColor("#2E8B57")))
+        painter.drawRoundedRect(QRect(w_sys + w_usr - 4, 0, w_his + 4, self.height()), 4, 4)
+
+
+class TimelineStageBar(QWidget):
+    """Horizontal bar chart indicating execution duration of a stage relative to total latency."""
+
+    def __init__(self, label: str, duration: float, total_duration: float, parent=None):
+        super().__init__(parent)
+        self.label = label
+        self.duration = duration
+        self.total_duration = total_duration
+        self.setFixedHeight(24)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        # Background
+        painter.setBrush(QBrush(QColor(Theme.CREAM_DARK)))
+        painter.setPen(Qt.NoPen)
+        painter.drawRoundedRect(self.rect(), 4, 4)
+
+        # Fill duration proportionally
+        ratio = self.duration / self.total_duration if self.total_duration > 0.0 else 0.0
+        w_fill = int(ratio * self.width())
+        if w_fill > 0:
+            painter.setBrush(QBrush(QColor("#4CAF50")))
+            painter.drawRoundedRect(QRect(0, 0, w_fill, self.height()), 4, 4)
+
+        # Labels text
+        painter.setFont(QFont("Segoe UI", 9))
+        painter.setPen(QColor(Theme.TEXT_DARK))
+        painter.drawText(8, 16, f"{self.label} ({self.duration:.3f} s)")
+
+        percentage = int(ratio * 100)
+        painter.drawText(self.width() - 40, 16, f"{percentage}%")
+
+
 class EggInspectorWindow(QDialog):
     """Developer-only diagnostics and performance profiling dashboard."""
 
@@ -949,6 +1024,7 @@ class EggInspectorWindow(QDialog):
 
         # Initialize Tabs
         self._init_performance_tab()
+        self._init_startup_tab()
         self._init_placeholder_tabs()
 
         # 2. Status Bar live panel at bottom
@@ -1029,6 +1105,27 @@ class EggInspectorWindow(QDialog):
         layout.addWidget(splitter)
 
         self.tabs.addTab(perf_widget, "📊 Performance")
+
+    def _init_startup_tab(self) -> None:
+        """Build the Startup timing panel inside Egg Inspector."""
+        startup_widget = QWidget()
+        layout = QVBoxLayout(startup_widget)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        title_lbl = QLabel("Startup Performance")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        layout.addWidget(title_lbl)
+
+        self.startup_scroll = QScrollArea()
+        self.startup_scroll.setWidgetResizable(True)
+        self.startup_scroll.setStyleSheet(
+            f"border: 1px solid {Theme.BORDER}; border-radius: 6px; background: {Theme.CREAM_DARK};"
+        )
+        layout.addWidget(self.startup_scroll, stretch=1)
+
+        self.tabs.addTab(startup_widget, "🚀 Startup")
 
     def _init_placeholder_tabs(self) -> None:
         placeholder_tabs = [
@@ -1139,9 +1236,137 @@ class EggInspectorWindow(QDialog):
 
         if not hasattr(self, "_gpu_name"):
             self._gpu_name, self._vram = profiler.get_gpu_diagnostics()
-        
+
         self.status_labels["gpu"].setText(f"GPU: {self._gpu_name}")
         self.status_labels["vram"].setText(f"VRAM: {self._vram}")
+
+        # Refresh startup panel (only needed until it's finalized)
+        self._refresh_startup_panel()
+
+    def _refresh_startup_panel(self) -> None:
+        """Rebuild the startup timing panel content from the StartupService profile."""
+        if not hasattr(self, "startup_scroll"):
+            return
+
+        # Try to get the startup service from the parent window
+        parent_window = self.parent()
+        startup_service = None
+        if parent_window and hasattr(parent_window, "_startup_service"):
+            startup_service = parent_window._startup_service
+        elif hasattr(self._services, "_startup_service"):
+            startup_service = self._services._startup_service
+
+        if startup_service is None:
+            return
+
+        profile = startup_service.profile
+        state = startup_service.state
+
+        # Avoid rebuilding when nothing has changed and startup is finalized
+        profile_key = (tuple(sorted(profile.stages.items())), profile.status)
+        if getattr(self, "_last_startup_key", None) == profile_key and state.value != "INITIALIZING":
+            return
+        self._last_startup_key = profile_key
+
+        # Reconstruct the scroll content
+        old_w = self.startup_scroll.takeWidget()
+        if old_w:
+            old_w.deleteLater()
+
+        content = QWidget()
+        content.setStyleSheet("background: transparent;")
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(16, 16, 16, 16)
+        content_layout.setSpacing(0)
+
+        grid_widget = QWidget()
+        grid = QGridLayout(grid_widget)
+        grid.setContentsMargins(0, 0, 0, 0)
+        grid.setVerticalSpacing(10)
+        grid.setHorizontalSpacing(24)
+
+        STAGE_ORDER = [
+            "SessionContext",
+            "Scheduler",
+            "Reminder Check",
+            "Voice Initialization",
+            "Ollama Connection",
+            "Model Warm-Up",
+            "Configuration",
+        ]
+
+        row = 0
+
+        def _add_row(label: str, value: str, bold: bool = False, color: str = "") -> None:
+            nonlocal row
+            name_lbl = QLabel(label)
+            name_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold if bold else QFont.Normal))
+            name_lbl.setStyleSheet(f"color: {color or Theme.TEXT_DARK};")
+
+            val_lbl = QLabel(value)
+            val_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold if bold else QFont.Normal))
+            val_lbl.setStyleSheet(f"color: {color or Theme.TEXT_DARK};")
+            val_lbl.setAlignment(Qt.AlignRight)
+
+            grid.addWidget(name_lbl, row, 0)
+            grid.addWidget(val_lbl, row, 1)
+            row += 1
+
+        # Individual stages
+        for stage_name in STAGE_ORDER:
+            val = profile.stages.get(stage_name)
+            if val is not None:
+                _add_row(stage_name, f"{val:.2f} s")
+
+        # Any extra stages not in the expected list
+        for k, v in profile.stages.items():
+            if k not in STAGE_ORDER:
+                _add_row(k, f"{v:.2f} s")
+
+        content_layout.addWidget(grid_widget)
+
+        # Divider
+        div = QFrame()
+        div.setFrameShape(QFrame.HLine)
+        div.setStyleSheet(f"background-color: {Theme.BORDER}; margin-top: 8px; margin-bottom: 8px;")
+        content_layout.addWidget(div)
+
+        # Total startup time
+        total_layout = QHBoxLayout()
+        total_name = QLabel("Total Startup Time")
+        total_name.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        total_name.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        total_val = QLabel(f"{profile.total_time:.2f} s" if profile.total_time > 0 else "Running...")
+        total_val.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        total_val.setStyleSheet("color: #4CAF50;")
+        total_val.setAlignment(Qt.AlignRight)
+        total_layout.addWidget(total_name)
+        total_layout.addStretch()
+        total_layout.addWidget(total_val)
+        content_layout.addLayout(total_layout)
+
+        # Startup Status
+        status_color = {
+            "READY": "#4CAF50",
+            "INITIALIZING": "#FFA726",
+            "ERROR": "#EF5350",
+        }.get(state.value, Theme.TEXT_DARK)
+        status_layout = QHBoxLayout()
+        status_name = QLabel("Startup Status")
+        status_name.setFont(QFont("Segoe UI", 10))
+        status_name.setStyleSheet(f"color: {Theme.TEXT_MID};")
+        status_val = QLabel(state.value)
+        status_val.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        status_val.setStyleSheet(f"color: {status_color};")
+        status_val.setAlignment(Qt.AlignRight)
+        status_layout.addWidget(status_name)
+        status_layout.addStretch()
+        status_layout.addWidget(status_val)
+        content_layout.addLayout(status_layout)
+
+        content_layout.addStretch()
+        self.startup_scroll.setWidget(content)
+
 
     def _refresh_request_list(self, history: List[RequestProfile]) -> None:
         """Repopulate the request list widget (chronologically descending)."""
@@ -1178,10 +1403,25 @@ class EggInspectorWindow(QDialog):
         scroll_content.setStyleSheet("background: transparent;")
         main_layout = QVBoxLayout(scroll_content)
         main_layout.setContentsMargins(12, 12, 12, 12)
-        main_layout.setSpacing(12)
+        main_layout.setSpacing(14)
 
-        meta_layout = QHBoxLayout()
-        meta_layout.setSpacing(10)
+        # Header with classification and complexity score
+        header_layout = QHBoxLayout()
+        header_title = QLabel(f"Request #{profile.request_num} Details")
+        header_title.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        header_title.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        header_layout.addWidget(header_title)
+
+        class_lbl = QLabel(f"[{profile.request_classification.upper()}] (Complexity: {profile.complexity_score}/10)")
+        class_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        class_lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
+        header_layout.addStretch()
+        header_layout.addWidget(class_lbl)
+        main_layout.addLayout(header_layout)
+
+        # Flags layout (Memory, Knowledge, Vision, Tools)
+        flags_layout = QHBoxLayout()
+        flags_layout.setSpacing(10)
         
         def make_flag_label(name: str, active: bool) -> QLabel:
             lbl = QLabel(f"{name}: {'✅' if active else '❌'}")
@@ -1189,18 +1429,111 @@ class EggInspectorWindow(QDialog):
             lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
             return lbl
 
-        meta_layout.addWidget(make_flag_label("Memory", profile.memory_used))
-        meta_layout.addWidget(make_flag_label("Knowledge", profile.knowledge_used))
-        meta_layout.addWidget(make_flag_label("Vision", profile.vision_used))
-        meta_layout.addWidget(make_flag_label("Tools", profile.tools_executed))
-        
-        main_layout.addLayout(meta_layout)
+        flags_layout.addWidget(make_flag_label("Memory", profile.memory_used))
+        flags_layout.addWidget(make_flag_label("Knowledge", profile.knowledge_used))
+        flags_layout.addWidget(make_flag_label("Vision", profile.vision_used))
+        flags_layout.addWidget(make_flag_label("Tools", profile.tools_executed))
+        main_layout.addLayout(flags_layout)
 
-        grid_widget = QWidget()
-        grid_layout = QGridLayout(grid_widget)
+        # Metadata Section
+        meta_section_title = QLabel("Model & Connection Info")
+        meta_section_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        meta_section_title.setStyleSheet(f"color: {Theme.TEXT_MID}; text-transform: uppercase;")
+        main_layout.addWidget(meta_section_title)
+
+        grid_meta = QWidget()
+        grid_layout = QGridLayout(grid_meta)
         grid_layout.setContentsMargins(0, 0, 0, 0)
-        grid_layout.setVerticalSpacing(8)
-        grid_layout.setHorizontalSpacing(20)
+        grid_layout.setVerticalSpacing(6)
+        grid_layout.setHorizontalSpacing(16)
+
+        def add_meta_row(label: str, val: str, row: int):
+            lbl_name = QLabel(label)
+            lbl_name.setFont(QFont("Segoe UI", 9))
+            lbl_name.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            lbl_val = QLabel(val)
+            lbl_val.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            lbl_val.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            grid_layout.addWidget(lbl_name, row, 0)
+            grid_layout.addWidget(lbl_val, row, 1)
+
+        add_meta_row("Model Name", profile.model_name, 0)
+        add_meta_row("Provider", profile.provider.upper(), 1)
+        add_meta_row("Keep Alive", profile.keep_alive, 2)
+        
+        state_color = "#4CAF50" if profile.model_state == "Warm" else "#FFA726"
+        add_meta_row("Model State", f"<span style='color: {state_color};'>{profile.model_state}</span>", 3)
+        # Enable rich text formatting for state color
+        grid_layout.itemAtPosition(3, 1).widget().setTextFormat(Qt.RichText)
+        
+        add_meta_row("First Token Latency", f"{profile.first_token_latency:.2f} s", 4)
+        add_meta_row("Generation Speed", f"{profile.generation_speed:.1f} tokens/s", 5)
+
+        main_layout.addWidget(grid_meta)
+
+        # Divider
+        div1 = QFrame()
+        div1.setFrameShape(QFrame.HLine)
+        div1.setStyleSheet(f"background-color: {Theme.BORDER};")
+        main_layout.addWidget(div1)
+
+        # Tokens Section
+        token_section_title = QLabel("Token Usage")
+        token_section_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        token_section_title.setStyleSheet(f"color: {Theme.TEXT_MID}; text-transform: uppercase;")
+        main_layout.addWidget(token_section_title)
+
+        token_summary = QHBoxLayout()
+        token_summary.addWidget(QLabel(f"<b>Total:</b> {profile.total_tokens} tokens"))
+        token_summary.addStretch()
+        token_summary.addWidget(QLabel(f"<b>Prompt:</b> {profile.prompt_tokens} (size: {profile.prompt_char_count} chars)"))
+        token_summary.addStretch()
+        token_summary.addWidget(QLabel(f"<b>Output:</b> {profile.output_tokens}"))
+        for i in range(token_summary.count()):
+            item = token_summary.itemAt(i).widget()
+            if item:
+                item.setFont(QFont("Segoe UI", 9))
+                item.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        main_layout.addLayout(token_summary)
+
+        # Stacked Token Bar
+        token_bar = StackedTokenBar(
+            profile.system_prompt_tokens,
+            profile.user_prompt_tokens,
+            profile.history_tokens,
+            self
+        )
+        main_layout.addWidget(token_bar)
+
+        # Token Legend
+        legend_layout = QHBoxLayout()
+        def add_legend_item(color: str, text: str):
+            indicator = QLabel("■")
+            indicator.setStyleSheet(f"color: {color}; font-size: 12px;")
+            label = QLabel(text)
+            label.setFont(QFont("Segoe UI", 8))
+            label.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            legend_layout.addWidget(indicator)
+            legend_layout.addWidget(label)
+            legend_layout.addSpacing(10)
+
+        add_legend_item("#8A2BE2", f"System ({profile.system_prompt_tokens})")
+        add_legend_item("#1E90FF", f"User ({profile.user_prompt_tokens})")
+        add_legend_item("#2E8B57", f"History ({profile.history_tokens})")
+        legend_layout.addStretch()
+        main_layout.addLayout(legend_layout)
+
+        # Divider
+        div2 = QFrame()
+        div2.setFrameShape(QFrame.HLine)
+        div2.setStyleSheet(f"background-color: {Theme.BORDER};")
+        main_layout.addWidget(div2)
+
+        # Stage Timings (Timeline) Section
+        timeline_section_title = QLabel("Execution Stages Timeline")
+        timeline_section_title.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        timeline_section_title.setStyleSheet(f"color: {Theme.TEXT_MID}; text-transform: uppercase;")
+        main_layout.addWidget(timeline_section_title)
 
         stages_display = [
             ("Speech-to-Text", "Speech-to-Text"),
@@ -1214,47 +1547,165 @@ class EggInspectorWindow(QDialog):
             ("Streaming", "Streaming"),
         ]
 
-        row = 0
+        timeline_container = QWidget()
+        timeline_layout = QVBoxLayout(timeline_container)
+        timeline_layout.setContentsMargins(0, 0, 0, 0)
+        timeline_layout.setSpacing(6)
+
+        total_time_stages = profile.total_time
         for display_name, stage_key in stages_display:
             val = profile.stages.get(stage_key)
             if val is not None:
-                name_lbl = QLabel(display_name)
-                name_lbl.setFont(QFont("Segoe UI", 9))
-                name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
-                
-                val_lbl = QLabel(f"{val:.2f} s")
-                val_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
-                val_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
-                val_lbl.setAlignment(Qt.AlignRight)
+                stage_bar = TimelineStageBar(display_name, val, total_time_stages, self)
+                timeline_layout.addWidget(stage_bar)
 
-                grid_layout.addWidget(name_lbl, row, 0)
-                grid_layout.addWidget(val_lbl, row, 1)
-                row += 1
+        main_layout.addWidget(timeline_container)
 
-        main_layout.addWidget(grid_widget)
+        # Divider
+        div3 = QFrame()
+        div3.setFrameShape(QFrame.HLine)
+        div3.setStyleSheet(f"background-color: {Theme.BORDER};")
+        main_layout.addWidget(div3)
 
-        divider = QFrame()
-        divider.setFrameShape(QFrame.HLine)
-        divider.setStyleSheet(f"background-color: {Theme.BORDER};")
-        main_layout.addWidget(divider)
+        # Comparison Action & Total Latency
+        bottom_layout = QHBoxLayout()
+        
+        comp_btn = QPushButton("⚖ Compare with Averages")
+        comp_btn.setFont(QFont("Segoe UI", 9, QFont.Bold))
+        comp_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {Theme.BTN_BG};
+                color: {Theme.TEXT_DARK};
+                border: 1px solid {Theme.BORDER};
+                border-radius: 4px;
+                padding: 4px 10px;
+            }}
+            QPushButton:hover {{ background: {Theme.BTN_HOVER}; }}
+            QPushButton:pressed {{ background: {Theme.BTN_PRESS}; }}
+        """)
+        comp_btn.clicked.connect(self._on_compare_clicked)
+        bottom_layout.addWidget(comp_btn)
+        
+        bottom_layout.addStretch()
 
-        total_layout = QHBoxLayout()
-        total_lbl = QLabel("Total Execution Time")
+        total_lbl = QLabel("Total Execution Time:")
         total_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
         total_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        bottom_layout.addWidget(total_lbl)
 
         total_val = QLabel(f"{profile.total_time:.2f} s")
         total_val.setFont(QFont("Segoe UI", 10, QFont.Bold))
-        total_val.setStyleSheet(f"color: #4CAF50;")
-        total_val.setAlignment(Qt.AlignRight)
+        total_val.setStyleSheet("color: #4CAF50;")
+        bottom_layout.addWidget(total_val)
+        
+        main_layout.addLayout(bottom_layout)
 
-        total_layout.addWidget(total_lbl)
-        total_layout.addStretch()
-        total_layout.addWidget(total_val)
-        main_layout.addLayout(total_layout)
-
-        # Add vertical stretch at the end of the layout so elements stay aligned to the top
-        # and trigger scrolling when content height exceeds viewport height.
+        # Add vertical stretch so items align nicely to the top
         main_layout.addStretch()
 
         self.details_scroll.setWidget(scroll_content)
+
+    def _on_compare_clicked(self) -> None:
+        """Show comparison dialog comparing this request's stats to history averages."""
+        selected_row = self.req_list.currentRow()
+        if selected_row < 0:
+            return
+
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        profiler = PerformanceProfiler.get_instance()
+        
+        with profiler._history_lock:
+            if selected_row < len(profiler.history):
+                profile = profiler.history[len(profiler.history) - 1 - selected_row]
+            else:
+                return
+            history = list(profiler.history)
+
+        if not history:
+            return
+
+        # Calculate averages
+        avg_total = sum(p.total_time for p in history) / len(history)
+        avg_ft = sum(p.first_token_latency for p in history) / len(history)
+        avg_speed = sum(p.generation_speed for p in history) / len(history)
+        avg_tokens = sum(p.total_tokens for p in history) / len(history)
+
+        comp_dialog = QDialog(self)
+        comp_dialog.setWindowTitle("Request Comparison")
+        comp_dialog.setMinimumWidth(380)
+        comp_dialog.setStyleSheet(f"background-color: {Theme.CREAM}; color: {Theme.TEXT_DARK};")
+        
+        layout = QVBoxLayout(comp_dialog)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(14)
+
+        title = QLabel(f"Comparing Request #{profile.request_num} with History Averages")
+        title.setFont(QFont("Segoe UI", 11, QFont.Bold))
+        title.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        layout.addWidget(title)
+
+        grid = QGridLayout()
+        grid.setSpacing(10)
+
+        headers = ["Metric", f"Req #{profile.request_num}", "History Avg", "Difference"]
+        for col, h in enumerate(headers):
+            lbl = QLabel(h)
+            lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
+            grid.addWidget(lbl, 0, col)
+
+        metrics = [
+            ("Latency", profile.total_time, avg_total, "s"),
+            ("First Token", profile.first_token_latency, avg_ft, "s"),
+            ("Gen Speed", profile.generation_speed, avg_speed, "t/s"),
+            ("Total Tokens", profile.total_tokens, avg_tokens, "t"),
+        ]
+
+        for row, (name, val, avg, unit) in enumerate(metrics, start=1):
+            name_lbl = QLabel(name)
+            name_lbl.setFont(QFont("Segoe UI", 9))
+            name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            grid.addWidget(name_lbl, row, 0)
+            
+            val_lbl = QLabel(f"{val:.2f} {unit}" if isinstance(val, float) else f"{int(val)} {unit}")
+            val_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            val_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            grid.addWidget(val_lbl, row, 1)
+
+            avg_lbl = QLabel(f"{avg:.2f} {unit}" if isinstance(avg, float) else f"{int(avg)} {unit}")
+            avg_lbl.setFont(QFont("Segoe UI", 9))
+            avg_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            grid.addWidget(avg_lbl, row, 2)
+
+            diff = val - avg
+            pct = (diff / avg * 100) if avg > 0 else 0
+            if diff < 0:
+                diff_text = f"{diff:.2f} ({pct:.1f}%)" if isinstance(diff, float) else f"{int(diff)} ({pct:.1f}%)"
+                diff_color = "#4CAF50" if name in ("Latency", "First Token") else "#EF5350"
+            else:
+                diff_text = f"+{diff:.2f} (+{pct:.1f}%)" if isinstance(diff, float) else f"+{int(diff)} (+{pct:.1f}%)"
+                diff_color = "#EF5350" if name in ("Latency", "First Token") else "#4CAF50"
+
+            diff_lbl = QLabel(diff_text)
+            diff_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+            diff_lbl.setStyleSheet(f"color: {diff_color};")
+            grid.addWidget(diff_lbl, row, 3)
+
+        layout.addLayout(grid)
+
+        # Close button
+        btn = QPushButton("Close")
+        btn.clicked.connect(comp_dialog.accept)
+        btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {Theme.BTN_BG};
+                color: {Theme.TEXT_DARK};
+                border: 1px solid {Theme.BORDER};
+                border-radius: 4px;
+                padding: 6px 14px;
+            }}
+            QPushButton:hover {{ background: {Theme.BTN_HOVER}; }}
+        """)
+        layout.addWidget(btn, alignment=Qt.AlignRight)
+
+        comp_dialog.exec()

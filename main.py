@@ -14,6 +14,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from PySide6.QtCore import Qt, Signal, Slot, QTimer, QPropertyAnimation
 from PySide6.QtGui import QIcon, QFont
 from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QGraphicsOpacityEffect
+from backend.startup.startup_service import StartupService, StartupState
 
 from app.container import AppContainer
 from core.commands import CommandResult
@@ -24,7 +25,7 @@ from ui.dialogs import SettingsDialog
 from ui.widgets import ChatDisplay, InputBar, TitleBar
 
 APP_NAME = "EggMan"
-APP_VERSION = "0.4"
+APP_VERSION = "0.5"
 APP_ORGANIZATION = "EggMan"
 WINDOW_TITLE = APP_NAME
 WINDOWS_APP_ID = f"{APP_ORGANIZATION}.{APP_NAME}.{APP_VERSION}"
@@ -32,11 +33,14 @@ WINDOWS_APP_ID = f"{APP_ORGANIZATION}.{APP_NAME}.{APP_VERSION}"
 
 class ChatWindow(QWidget):
     _reply_ready = Signal(str, str)
+    _reply_chunk = Signal(str)
     _voice_text_ready = Signal(str)
     _voice_error = Signal(str)
     _voice_state_changed = Signal(str)
     _schedule_triggered = Signal(str)
-    
+    _startup_ready = Signal()
+    _startup_error = Signal(str)
+
     generation_started = Signal()
     generation_finished = Signal()
     chat_closed = Signal()
@@ -96,8 +100,6 @@ class ChatWindow(QWidget):
         self._build_ui()
         self._setup_voice_callbacks()
         self._connect_signals()
-        self._post_welcome()
-        self._post_startup_status()
 
         if hasattr(self._services, "vision_manager"):
             self._services.vision_manager.set_submit_callback(self._on_ask_about_screenshot)
@@ -107,9 +109,22 @@ class ChatWindow(QWidget):
             self._services.scheduler.set_trigger_callback(self._on_schedule_trigger_from_thread)
             self._schedule_triggered.connect(self._on_schedule_triggered)
 
-        if hasattr(self._services, "wake_word_service"):
-            self._logger.info("Voice initialization")
-            QTimer.singleShot(500, self._services.wake_word_service.start)
+        # ----- Startup System v2 -----
+        self._startup_service = StartupService(self._services)
+        self._startup_ready.connect(self._on_startup_ready)
+        self._startup_error.connect(self._on_startup_error)
+
+        # Show the welcome/initializing message immediately
+        self._post_startup_init_message()
+
+        # Disable input while initializing
+        QTimer.singleShot(0, self._set_input_initializing)
+
+        # Launch concurrent background initialization
+        self._startup_service.run_async(
+            on_ready=self._startup_ready.emit,
+            on_error=self._startup_error.emit,
+        )
 
     def _apply_window_icon(self):
         icon = QIcon(str(APP_ICON_PATH))
@@ -239,6 +254,7 @@ class ChatWindow(QWidget):
 
     def _connect_signals(self):
         self._reply_ready.connect(self._finish_typing)
+        self._reply_chunk.connect(self._on_reply_chunk)
         self._voice_text_ready.connect(self._on_voice_text)
         self._voice_error.connect(self._on_voice_error)
         self._voice_state_changed.connect(self._on_voice_state_changed)
@@ -265,17 +281,62 @@ class ChatWindow(QWidget):
         if hasattr(self, "_help_window") and self._help_window is not None:
             self._help_window.apply_theme()
 
-    def _post_welcome(self):
-        self._chat.append_message("egg", "Hello! I'm EggMan 🥚", self._now())
+    def _post_startup_init_message(self):
+        msg = (
+            "👋 Welcome back.\n\n"
+            "I'm getting everything ready in the background.\n"
+            "This should only take a few seconds.\n\n"
+            "I'll let you know as soon as I'm ready."
+        )
+        self._chat.append_message("egg", msg, self._now())
 
-    def _post_startup_status(self):
-        error = self._services.ollama_startup_error
-        if error:
-            self._chat.append_message(
-                "egg",
-                f"Ollama is not available right now.\n{error}\n\nOpen Settings to check your connection or start Ollama.",
-                self._now(),
+    def _set_input_initializing(self):
+        """Update input placeholder while initializing."""
+        if self._input_bar is not None:
+            self._input_bar.entry.setPlaceholderText("Waiting for EggMan...")
+
+    @Slot()
+    def _on_startup_ready(self):
+        """Called on Qt main thread when all startup tasks complete."""
+        self._logger.info("[STARTUP] All startup tasks completed — entering READY state")
+
+        # Restore normal input
+        if self._input_bar is not None:
+            self._input_bar.entry.setPlaceholderText("")
+        self._set_input_enabled(True)
+
+        # Start wake word now that everything is ready
+        if hasattr(self._services, "wake_word_service"):
+            QTimer.singleShot(100, self._services.wake_word_service.start)
+
+        # Report any Ollama error
+        ollama_error = self._services.ollama_startup_error
+        if ollama_error:
+            ready_msg = (
+                "✅ Almost ready — but Ollama is not available.\n\n"
+                f"{ollama_error}\n\n"
+                "Open Settings to check your Ollama connection."
             )
+        else:
+            ready_msg = (
+                "✅ I'm ready.\n\n"
+                "Everything has finished loading.\n"
+                "How can I help?"
+            )
+        self._chat.append_message("egg", ready_msg, self._now())
+
+    @Slot(str)
+    def _on_startup_error(self, error: str):
+        """Called on Qt main thread if startup encounters a critical error."""
+        self._logger.error("[STARTUP] Startup failed: %s", error)
+        if self._input_bar is not None:
+            self._input_bar.entry.setPlaceholderText("")
+        self._set_input_enabled(True)
+        self._chat.append_message(
+            "egg",
+            f"⚠️ Startup encountered an error.\n\n{error}\n\nSome features may be unavailable.",
+            self._now(),
+        )
 
     def _on_send(self):
         text = self._input_bar.entry.text().strip()
@@ -296,6 +357,15 @@ class ChatWindow(QWidget):
             return
 
         self._chat.append_message("user", text, self._now())
+
+        # Block AI during startup — only allow certain slash commands
+        if hasattr(self, "_startup_service") and self._startup_service.should_block_message(text):
+            self._chat.append_message(
+                "egg",
+                "⏳ I'm still getting everything ready.\n\nGive me just a few more seconds and I'll let you know as soon as I'm ready.",
+                self._now(),
+            )
+            return
 
         try:
             self._logger.debug("UI _submit_message entering")
@@ -355,24 +425,35 @@ class ChatWindow(QWidget):
             self._set_input_enabled(True)
 
     def _fetch_reply(self, user_message: str, timestamp: str, images: list[str] | None = None):
-        """Fetch AI reply in background thread to avoid UI blocking."""
+        """Fetch AI reply using streaming in background thread to avoid UI blocking."""
         start = perf_counter()
         self._logger.debug("AI worker entering _fetch_reply")
+        full_text = ""
         try:
             history_list = self._chat.get_history()
             history_tuples = [(sender, text) for sender, text, ts in history_list]
-            reply = self._conv.get_reply(user_message, images=images, history=history_tuples)
+            
+            # Fetch using stream_reply instead of get_reply
+            stream_response = self._conv.stream_reply(user_message, images=images, history=history_tuples)
+            
+            for chunk in stream_response:
+                text_chunk = chunk.text
+                if text_chunk:
+                    full_text += text_chunk
+                    self._reply_chunk.emit(text_chunk)
+
             self._logger.debug(
-                "AI worker received reply in %.1fms len=%d",
+                "AI worker finished stream in %.1fms len=%d",
                 (perf_counter() - start) * 1000,
-                len(str(reply)),
+                len(full_text),
             )
         except Exception as exc:
-            self._logger.error(f"AI response failed: {exc}\n{traceback.format_exc()}")
-            reply = "Sorry, I'm having trouble thinking right now."
+            self._logger.error(f"AI response streaming failed: {exc}\n{traceback.format_exc()}")
+            full_text = "Sorry, I'm having trouble thinking right now."
+            self._reply_chunk.emit(full_text)
 
         self._logger.debug("AI worker emitting reply_ready")
-        self._reply_ready.emit(str(reply), timestamp)
+        self._reply_ready.emit(full_text, timestamp)
 
     def _handle_command(self, result: CommandResult):
         if result.action == "clear":
@@ -420,8 +501,21 @@ class ChatWindow(QWidget):
     def _start_typing(self):
         self._logger.debug("UI entering _start_typing")
         self._set_input_enabled(False)
+        self._is_first_chunk = True
+        self._current_streaming_bubble = None
         self._chat.append_message("egg", "...", self._now())
         self.generation_started.emit()
+
+    @Slot(str)
+    def _on_reply_chunk(self, chunk: str):
+        """Called on Qt main thread as new streaming text chunks arrive."""
+        if self._is_first_chunk:
+            self._is_first_chunk = False
+            self._chat.remove_last_bubble()
+            self._current_streaming_bubble = self._chat.append_message("egg", "", self._now(), is_streamed=True)
+            
+        if self._current_streaming_bubble:
+            self._current_streaming_bubble.add_streaming_text(chunk)
 
     @Slot(str, str)
     def _finish_typing(self, reply: str, timestamp: str):
@@ -449,6 +543,8 @@ class ChatWindow(QWidget):
             self._logger.error(f"Memory extraction failed: {exc}\n{traceback.format_exc()}")
 
     def _set_input_enabled(self, enabled: bool, keep_mic: bool = False):
+        if self._input_bar is None:
+            return
         self._input_bar.entry.setEnabled(enabled)
         self._input_bar.send_btn.setEnabled(enabled)
         self._input_bar.screenshot_btn.setEnabled(enabled)
@@ -710,6 +806,10 @@ def main() -> int:
     chat_window.generation_started.connect(companion._on_generation_started)
     chat_window.generation_finished.connect(companion._on_generation_finished)
     chat_window.chat_closed.connect(lambda: companion.set_egg_state("inactive"))
+
+    # Apply startup input state now that the input_bar is wired
+    chat_window._set_input_initializing()
+    chat_window._set_input_enabled(False)
 
     # Show companion window
     companion.show()

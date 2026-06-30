@@ -1,5 +1,5 @@
-from PySide6.QtCore import QPoint, Qt, QTimer
-from PySide6.QtGui import QFont
+from PySide6.QtCore import QPoint, Qt, QTimer, QRect, QSize, Property, QParallelAnimationGroup, QPropertyAnimation
+from PySide6.QtGui import QFont, QFontMetrics, QPainter, QColor
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -10,9 +10,249 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QVBoxLayout,
     QWidget,
+    QLayout,
 )
 
 from core.themes import Theme
+
+
+class FlowLayout(QLayout):
+    """Layout that arranges widgets horizontally and wraps them line-by-line."""
+
+    def __init__(self, parent=None, margin=0, hspacing=0, vspacing=3):
+        super().__init__(parent)
+        self._items = []
+        self._hspacing = hspacing
+        self._vspacing = vspacing
+        self.setContentsMargins(margin, margin, margin, margin)
+
+    def __del__(self):
+        item = self.takeAt(0)
+        while item:
+            item = self.takeAt(0)
+
+    def addItem(self, item):
+        self._items.append(item)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, index):
+        if 0 <= index < len(self._items):
+            return self._items[index]
+        return None
+
+    def takeAt(self, index):
+        if 0 <= index < len(self._items):
+            return self._items.pop(index)
+        return None
+
+    def expandingDirections(self):
+        return Qt.Orientations(0)
+
+    def hasHeightForWidth(self):
+        return True
+
+    def heightForWidth(self, width):
+        return self._do_layout(QRect(0, 0, width, 0), True)
+
+    def setGeometry(self, rect):
+        super().setGeometry(rect)
+        self._do_layout(rect, False)
+
+    def sizeHint(self):
+        # Calculate total width if laid out on a single line
+        total_w = 0
+        default_line_height = QFontMetrics(Theme.FONT_CHAT).lineSpacing()
+        has_newline = False
+        for item in self._items:
+            widget = item.widget()
+            if widget:
+                if getattr(widget, "is_newline", False):
+                    has_newline = True
+                else:
+                    total_w += item.sizeHint().width()
+        
+        # Determine maximum allowed width based on current window size
+        parent_widget = self.parentWidget()
+        if parent_widget:
+            top_window = parent_widget.window()
+            win_width = top_window.width() if top_window else Theme.WIN_W
+        else:
+            win_width = Theme.WIN_W
+            
+        max_allowed_w = int(win_width * 0.72)
+        margin = self.contentsMargins().left()
+        
+        if total_w < max_allowed_w and not has_newline:
+            # Short text: shrink-to-fit width
+            return QSize(total_w + 2 * margin, default_line_height + 2 * margin)
+        else:
+            # Long text: wrap up to max_allowed_w
+            h = self.heightForWidth(max_allowed_w)
+            return QSize(max_allowed_w, h)
+
+    def minimumSize(self):
+        return self.sizeHint()
+
+    def _do_layout(self, rect, test_only):
+        x = rect.x()
+        y = rect.y()
+        line_height = 0
+        hspacing = self._hspacing
+        vspacing = self._vspacing
+        default_line_height = QFontMetrics(Theme.FONT_CHAT).lineSpacing()
+
+        for item in self._items:
+            widget = item.widget()
+            if widget is None:
+                continue
+
+            # Force line break on NewlineWidget
+            if getattr(widget, "is_newline", False):
+                x = rect.x()
+                y = y + (line_height if line_height > 0 else default_line_height) + vspacing
+                line_height = 0
+                continue
+
+            space_x = hspacing
+            space_y = vspacing
+            item_w = item.sizeHint().width()
+            item_h = item.sizeHint().height()
+
+            next_x = x + item_w + space_x
+            if next_x - space_x > rect.right() and line_height > 0:
+                x = rect.x()
+                y = y + line_height + space_y
+                next_x = x + item_w + space_x
+                line_height = 0
+
+            if not test_only:
+                item.setGeometry(QRect(QPoint(x, y), QSize(item_w, item_h)))
+
+            x = next_x
+            line_height = max(line_height, item_h)
+
+        return y + line_height - rect.y()
+
+
+class NewlineWidget(QWidget):
+    """Special zero-size widget used by FlowLayout to force newlines."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.is_newline = True
+        self.setFixedSize(0, 0)
+
+
+class AnimatedWordLabel(QWidget):
+    """Label rendering a single word/token with entry animations (subtle fade + upward motion)."""
+
+    def __init__(self, text: str, font: QFont, parent=None):
+        super().__init__(parent)
+        self.text = text
+        self.font = font
+        self._opacity = 0.0
+        self._offset_y = 6.0
+
+        fm = QFontMetrics(self.font)
+        self._text_size = fm.size(Qt.TextSingleLine, self.text)
+        w = self._text_size.width()
+        if text == " ":
+            w = fm.horizontalAdvance(" ")
+        self.setFixedSize(max(w, 1), max(self._text_size.height(), 1))
+
+    @Property(float)
+    def opacity(self) -> float:
+        return self._opacity
+
+    @opacity.setter
+    def opacity(self, val: float):
+        self._opacity = val
+        self.update()
+
+    @Property(float)
+    def offset_y(self) -> float:
+        return self._offset_y
+
+    @offset_y.setter
+    def offset_y(self, val: float):
+        self._offset_y = val
+        self.update()
+
+    def show_instantly(self):
+        self._opacity = 1.0
+        self._offset_y = 0.0
+        self.update()
+
+    def start_animation(self):
+        self.anim_group = QParallelAnimationGroup(self)
+
+        anim_op = QPropertyAnimation(self, b"opacity")
+        anim_op.setDuration(150)
+        anim_op.setStartValue(0.0)
+        anim_op.setEndValue(1.0)
+
+        anim_off = QPropertyAnimation(self, b"offset_y")
+        anim_off.setDuration(150)
+        anim_off.setStartValue(6.0)
+        anim_off.setEndValue(0.0)
+
+        self.anim_group.addAnimation(anim_op)
+        self.anim_group.addAnimation(anim_off)
+        self.anim_group.start()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setOpacity(self._opacity)
+        painter.setFont(self.font)
+        painter.setPen(QColor(Theme.TEXT_DARK))
+        
+        fm = QFontMetrics(self.font)
+        y = self.height() - fm.descent() - int(self._offset_y)
+        painter.drawText(0, y, self.text)
+
+
+class MessageTextContainer(QWidget):
+    """FlowLayout-based container that splits text into animatable tokens."""
+
+    def __init__(self, text: str, is_streamed: bool = False, parent=None):
+        super().__init__(parent)
+        self.layout = FlowLayout(self, margin=0, hspacing=0, vspacing=3)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        
+        if text:
+            self.add_text(text, animate=is_streamed)
+
+    def add_text(self, text: str, animate: bool = True):
+        tokens = self._tokenize(text)
+        for token in tokens:
+            if token == "\n":
+                w = NewlineWidget(self)
+                self.layout.addWidget(w)
+            else:
+                w = AnimatedWordLabel(token, Theme.FONT_CHAT, self)
+                self.layout.addWidget(w)
+                if animate:
+                    w.start_animation()
+                else:
+                    w.show_instantly()
+        self.updateGeometry()
+
+    def _tokenize(self, text: str) -> list[str]:
+        tokens = []
+        current = ""
+        for char in text:
+            if char in (' ', '\n'):
+                if current:
+                    tokens.append(current)
+                    current = ""
+                tokens.append(char)
+            else:
+                current += char
+        if current:
+            tokens.append(current)
+        return tokens
+
 
 
 class TitleBar(QWidget):
@@ -82,7 +322,7 @@ class TitleBar(QWidget):
 
 
 class MessageBubble(QWidget):
-    def __init__(self, sender: str, text: str, timestamp: str, parent=None):
+    def __init__(self, sender: str, text: str, timestamp: str, is_streamed: bool = False, parent=None):
         super().__init__(parent)
         self._is_user = (sender == "user")
 
@@ -101,12 +341,9 @@ class MessageBubble(QWidget):
         self._sender_label.setFont(Theme.FONT_SENDER)
         bubble_layout.addWidget(self._sender_label)
 
-        self._msg_label = QLabel(text)
-        self._msg_label.setFont(Theme.FONT_CHAT)
-        self._msg_label.setWordWrap(True)
-        self._msg_label.setMaximumWidth(int(Theme.WIN_W * 0.75))
-        self._msg_label.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)
-        bubble_layout.addWidget(self._msg_label)
+        # Container for text wrapping and token animation
+        self._text_container = MessageTextContainer(text, is_streamed=is_streamed, parent=self)
+        bubble_layout.addWidget(self._text_container)
 
         self._ts_label = QLabel(timestamp)
         self._ts_label.setFont(Theme.FONT_TIMESTAMP)
@@ -123,6 +360,11 @@ class MessageBubble(QWidget):
         self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
         self.apply_theme()
 
+    def add_streaming_text(self, text: str):
+        """Append a streaming chunk to the message bubble container."""
+        if self._text_container:
+            self._text_container.add_text(text, animate=True)
+
     def apply_theme(self):
         bg = Theme.BUBBLE_USER if self._is_user else Theme.BUBBLE_EGG
         self._bubble.setStyleSheet(f"""
@@ -133,9 +375,6 @@ class MessageBubble(QWidget):
         """)
         self._sender_label.setStyleSheet(
             f"color: {Theme.TEXT_MID}; background: transparent;"
-        )
-        self._msg_label.setStyleSheet(
-            f"color: {Theme.TEXT_DARK}; background: transparent;"
         )
         self._ts_label.setStyleSheet(
             f"color: {Theme.TEXT_FAINT}; background: transparent;"
@@ -189,7 +428,7 @@ class ChatDisplay(QScrollArea):
             if item and isinstance(item.widget(), MessageBubble):
                 item.widget().apply_theme()
 
-    def append_message(self, sender: str, text: str, timestamp: str) -> "MessageBubble":
+    def append_message(self, sender: str, text: str, timestamp: str, is_streamed: bool = False) -> "MessageBubble":
         if self._message_count == 0:
             self._empty_label.hide()
             while self._layout.count() > 0:
@@ -199,7 +438,7 @@ class ChatDisplay(QScrollArea):
             self._layout.addStretch()
 
         self._history.append((sender, text, timestamp))
-        bubble = MessageBubble(sender, text, timestamp)
+        bubble = MessageBubble(sender, text, timestamp, is_streamed=is_streamed)
         count = self._layout.count()
         self._layout.insertWidget(count - 1, bubble)
         self._message_count += 1

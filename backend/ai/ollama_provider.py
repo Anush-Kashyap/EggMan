@@ -120,6 +120,32 @@ class OllamaProvider(BaseProvider):
             text = str(data.get("response", "")).strip()
             elapsed_ms = (time.perf_counter() - start) * 1000
 
+            # Populate metrics
+            profile = profiler.get_current_profile()
+            if profile:
+                profile.prompt_tokens = data.get("prompt_eval_count", 0)
+                profile.output_tokens = data.get("eval_count", 0)
+                profile.load_duration = data.get("load_duration", 0) / 1e9
+                profile.prompt_eval_duration = data.get("prompt_eval_duration", 0) / 1e9
+                profile.eval_duration = data.get("eval_duration", 0) / 1e9
+                profile.prompt_char_count = len(payload.get("prompt", ""))
+                profile.provider = self.provider_name
+                profile.keep_alive = "5m (default)"
+                
+                classification = request.metadata.get("classification", "General")
+                profile.request_classification = classification
+                profile.complexity_score = min(10, max(1, len(request.user_message or "") // 100 + 1))
+                
+                # Breakdown tokens approximation
+                system_len = len(request.system_prompt or "")
+                history_len = sum(len(getattr(e, "text", "")) for e in request.conversation_history)
+                user_len = len(request.user_message or "")
+                total_len = system_len + history_len + user_len
+                if total_len > 0:
+                    profile.system_prompt_tokens = int((system_len / total_len) * profile.prompt_tokens)
+                    profile.user_prompt_tokens = int((user_len / total_len) * profile.prompt_tokens)
+                    profile.history_tokens = max(0, profile.prompt_tokens - profile.system_prompt_tokens - profile.user_prompt_tokens)
+
             if model == "qwen2.5vl:7b":
                 self._logger.info("Vision response received")
                 self._logger.info("Request duration: %.1fms", elapsed_ms)
@@ -162,9 +188,9 @@ class OllamaProvider(BaseProvider):
             self._logger.info("Vision request sent")
 
         self._logger.info("Ollama stream request model=%s message_len=%d", model, len(request.user_message or ""))
-        return StreamingResponse(chunks=self._stream_chunks(payload, start))
+        return StreamingResponse(chunks=self._stream_chunks(payload, start, request))
 
-    def _stream_chunks(self, payload: dict[str, Any], start: float) -> Iterable[str]:
+    def _stream_chunks(self, payload: dict[str, Any], start: float, request: AIRequest) -> Iterable[str]:
         model = payload["model"]
         is_vision = (model == "qwen2.5vl:7b")
         
@@ -197,6 +223,33 @@ class OllamaProvider(BaseProvider):
                     yield str(text)
                 if data.get("done"):
                     elapsed_ms = (time.perf_counter() - start) * 1000
+
+                    # Populate metrics
+                    profile = profiler.get_current_profile()
+                    if profile:
+                        profile.prompt_tokens = data.get("prompt_eval_count", 0)
+                        profile.output_tokens = data.get("eval_count", 0)
+                        profile.load_duration = data.get("load_duration", 0) / 1e9
+                        profile.prompt_eval_duration = data.get("prompt_eval_duration", 0) / 1e9
+                        profile.eval_duration = data.get("eval_duration", 0) / 1e9
+                        profile.prompt_char_count = len(payload.get("prompt", ""))
+                        profile.provider = self.provider_name
+                        profile.keep_alive = "5m (default)"
+                        
+                        classification = request.metadata.get("classification", "General")
+                        profile.request_classification = classification
+                        profile.complexity_score = min(10, max(1, len(request.user_message or "") // 100 + 1))
+                        
+                        # Breakdown tokens approximation
+                        system_len = len(request.system_prompt or "")
+                        history_len = sum(len(getattr(e, "text", "")) for e in request.conversation_history)
+                        user_len = len(request.user_message or "")
+                        total_len = system_len + history_len + user_len
+                        if total_len > 0:
+                            profile.system_prompt_tokens = int((system_len / total_len) * profile.prompt_tokens)
+                            profile.user_prompt_tokens = int((user_len / total_len) * profile.prompt_tokens)
+                            profile.history_tokens = max(0, profile.prompt_tokens - profile.system_prompt_tokens - profile.user_prompt_tokens)
+
                     if is_vision:
                         self._logger.info("Vision response received")
                         self._logger.info("Request duration: %.1fms", elapsed_ms)

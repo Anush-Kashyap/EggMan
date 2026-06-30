@@ -5,6 +5,7 @@ from time import perf_counter
 from backend.ai.ai_engine import AIEngine
 from backend.ai.models import AIRequest, MessageEntry
 from backend.ai.prompt_builder import PromptBuilder
+from backend.ai.streaming import StreamingResponse
 from core.providers import LocalProvider
 
 logger = logging.getLogger("eggman")
@@ -75,7 +76,8 @@ class ConversationEngine:
             system_prompt=system_prompt,
             user_message=user_message,
             conversation_history=history_entries,
-            images=images or []
+            images=images or [],
+            metadata={"classification": mode}
         )
         
         response = self._ai_engine.generate(request)
@@ -102,6 +104,66 @@ class ConversationEngine:
             return str(reply).strip() if reply else "I'm thinking..."
             
         return f"Sorry, something went wrong: {response.error or 'unknown error'}"
+
+    def stream_reply(
+        self,
+        user_message: str,
+        images: list[str] | None = None,
+        history: list[tuple[str, str]] | None = None
+    ) -> StreamingResponse:
+        from backend.session.session_manager import SessionManager
+        session = SessionManager.get_instance().context
+        if not session.conversation_id:
+            session.conversation_id = "default_session_conv"
+
+        msg_lower = user_message.lower()
+        if any(w in msg_lower for w in ["happy", "great", "awesome", "good", "nice"]):
+            session.current_emotion = "happy"
+        elif any(w in msg_lower for w in ["sad", "bad", "sorry", "unhappy"]):
+            session.current_emotion = "sad"
+        elif any(w in msg_lower for w in ["angry", "mad", "hate", "annoyed"]):
+            session.current_emotion = "angry"
+        else:
+            session.current_emotion = "neutral"
+
+        mode = self._detect_mode(user_message)
+        is_voice = bool(session.temporary_context.get("voice_mode", False))
+
+        from backend.profiler.performance_profiler import PerformanceProfiler
+        PerformanceProfiler.get_instance().start_stage("Prompt Builder")
+        system_prompt = self._prompt_builder.build_system_prompt(mode, is_voice, user_message)
+        PerformanceProfiler.get_instance().stop_stage("Prompt Builder")
+
+        history_entries = []
+        if history:
+            for sender, text in history:
+                history_entries.append(MessageEntry(sender=sender, text=text))
+
+        request = AIRequest(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            conversation_history=history_entries,
+            images=images or [],
+            metadata={"classification": mode}
+        )
+
+        if self._ai_engine is None:
+            # Fallback provider (LocalProvider) doesn't natively stream, yield single response
+            response = self._fallback_provider.generate(request)
+            reply = response.response_text if hasattr(response, 'response_text') else str(response)
+            return StreamingResponse(chunks=[reply])
+
+        # Tool Routing Check
+        tool_res = self._ai_engine._route_tool_request(request)
+        if tool_res is not None:
+            session.last_ai_message = tool_res.response_text
+            PerformanceProfiler.get_instance().finalize_request(
+                model_name="ToolRouter",
+                tools_executed=True
+            )
+            return StreamingResponse(chunks=[tool_res.response_text])
+
+        return self._ai_engine.stream(request)
 
     def _detect_mode(self, user_message: str) -> str:
         msg_lower = user_message.lower()

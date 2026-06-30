@@ -151,8 +151,11 @@ class AIEngine:
     def _wrap_stream(self, original_stream: Any, profiler: PerformanceProfiler) -> Iterable[str]:
         profile = profiler.get_current_profile()
         try:
-            for chunk in original_stream.chunks:
-                yield chunk
+            for chunk in original_stream:
+                if hasattr(chunk, "text"):
+                    yield chunk.text
+                else:
+                    yield str(chunk)
         finally:
             profiler.finalize_request(
                 model_name=getattr(original_stream, "model_name", None) or "Unknown",
