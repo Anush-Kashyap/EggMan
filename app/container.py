@@ -58,6 +58,19 @@ class AppContainer:
         self.command_handler = CommandHandler()
         self.database_manager = DatabaseManager(database_path=database_path)
         self.conversation_repository = ConversationRepository(self.database_manager)
+        from backend.database.repositories.task_repository import TaskRepository
+        from backend.scheduler.scheduler import Scheduler
+        self.task_repository = TaskRepository(self.database_manager)
+        self.scheduler = Scheduler(task_repository=self.task_repository)
+
+        from backend.database.repositories.kb_repository import KBRepository
+        from backend.knowledge.document_manager import DocumentManager
+        from backend.knowledge.knowledge_manager import KnowledgeManager
+
+        self.kb_repository = KBRepository(self.database_manager)
+        self.document_manager = DocumentManager()
+        self.knowledge_manager = KnowledgeManager(self.kb_repository, self.document_manager)
+
         self.memory_repository = MemoryRepository(self.database_manager)
         self.memory_extractor = MemoryExtractor()
         self.memory_manager = MemoryManager(repository=self.memory_repository, extractor=self.memory_extractor)
@@ -65,7 +78,7 @@ class AppContainer:
         self.embedding_service = None
         self.vector_store = None
         self.retrieval_service = RetrievalService(memory_manager=self.memory_manager)
-        self.context_builder = ContextBuilder(retrieval_service=self.retrieval_service)
+        self.context_builder = ContextBuilder(retrieval_service=self.retrieval_service, knowledge_manager=self.knowledge_manager)
         self.prompt_pipeline = PromptPipeline()
         self.streaming_pipeline = StreamingPipeline()
         self.tool_registry = ToolRegistry()

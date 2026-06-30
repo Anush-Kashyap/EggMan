@@ -131,7 +131,6 @@ class VisionManager(QObject):
         super().__init__(parent)
         self._sources: Dict[str, ImageSource] = {}
         self._active_preview: Optional[FloatingPreviewWidget] = None
-        self._pending_attachment: Optional[PendingAttachment] = None
         self._submit_callback: Optional[Callable[[str], None]] = None
 
         # Register screenshot source
@@ -142,6 +141,16 @@ class VisionManager(QObject):
         self.register_source("file", None)
         self.register_source("camera", None)
         self.register_source("region", None)
+
+    @property
+    def _pending_attachment(self) -> Optional[PendingAttachment]:
+        from backend.session.session_manager import SessionManager
+        return SessionManager.get_instance().context.pending_attachment
+
+    @_pending_attachment.setter
+    def _pending_attachment(self, val: Optional[PendingAttachment]) -> None:
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.pending_attachment = val
 
     def register_source(self, name: str, source: Optional[ImageSource]) -> None:
         """Register a new image source."""

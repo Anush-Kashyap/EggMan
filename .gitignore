@@ -44,7 +44,8 @@ htmlcov/
 # Terraform
 .terraform/
 # IDEs
-.idea/
-.project
 .pydevproject
+.project
+.idea
 .Trashes
+.agents/

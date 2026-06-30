@@ -12,8 +12,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from PySide6.QtCore import Qt, Signal, Slot, QTimer, QPropertyAnimation
-from PySide6.QtGui import QIcon
-from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QWidget, QGraphicsOpacityEffect
+from PySide6.QtGui import QIcon, QFont
+from PySide6.QtWidgets import QApplication, QFrame, QVBoxLayout, QHBoxLayout, QPushButton, QWidget, QGraphicsOpacityEffect
 
 from app.container import AppContainer
 from core.commands import CommandResult
@@ -24,7 +24,7 @@ from ui.dialogs import SettingsDialog
 from ui.widgets import ChatDisplay, InputBar, TitleBar
 
 APP_NAME = "EggMan"
-APP_VERSION = "0.1.9"
+APP_VERSION = "0.4"
 APP_ORGANIZATION = "EggMan"
 WINDOW_TITLE = APP_NAME
 WINDOWS_APP_ID = f"{APP_ORGANIZATION}.{APP_NAME}.{APP_VERSION}"
@@ -35,6 +35,7 @@ class ChatWindow(QWidget):
     _voice_text_ready = Signal(str)
     _voice_error = Signal(str)
     _voice_state_changed = Signal(str)
+    _schedule_triggered = Signal(str)
     
     generation_started = Signal()
     generation_finished = Signal()
@@ -96,6 +97,11 @@ class ChatWindow(QWidget):
         if hasattr(self._services, "vision_manager"):
             self._services.vision_manager.set_submit_callback(self._on_ask_about_screenshot)
 
+        # Wire scheduler trigger callback so reminders show in the UI
+        if hasattr(self._services, "scheduler"):
+            self._services.scheduler.set_trigger_callback(self._on_schedule_trigger_from_thread)
+            self._schedule_triggered.connect(self._on_schedule_triggered)
+
         if hasattr(self._services, "wake_word_service"):
             self._logger.info("Voice initialization")
             QTimer.singleShot(500, self._services.wake_word_service.start)
@@ -127,12 +133,44 @@ class ChatWindow(QWidget):
         self._chat = ChatDisplay()
         self._input_bar = None
 
+        # Bottom bar for main window controls (containing calendar button in bottom left)
+        self.bottom_bar = QWidget()
+        self.bottom_bar.setObjectName("bottomBar")
+        bottom_layout = QHBoxLayout(self.bottom_bar)
+        bottom_layout.setContentsMargins(8, 4, 8, 4)
+        bottom_layout.setSpacing(0)
+
+        self.calendar_btn = QPushButton("📅")
+        self.calendar_btn.setFixedSize(28, 28)
+        self.calendar_btn.setFont(QFont("Segoe UI", 12))
+        self.calendar_btn.setCursor(Qt.PointingHandCursor)
+        self.calendar_btn.setStyleSheet("""
+            QPushButton {
+                background: transparent;
+                border: none;
+            }
+            QPushButton:hover {
+                background: rgba(0, 0, 0, 0.06);
+                border-radius: 6px;
+            }
+            QPushButton:pressed {
+                background: rgba(0, 0, 0, 0.10);
+                border-radius: 6px;
+            }
+        """)
+        self.calendar_btn.clicked.connect(self._open_schedule)
+
+        bottom_layout.addWidget(self.calendar_btn)
+        bottom_layout.addStretch()
+
         root_layout = QVBoxLayout(self._container)
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
         root_layout.addWidget(self._title_bar)
         root_layout.addWidget(self._make_divider())
         root_layout.addWidget(self._chat, stretch=1)
+        root_layout.addWidget(self._make_divider())
+        root_layout.addWidget(self.bottom_bar)
 
         self._update_container_style()
 
@@ -192,6 +230,10 @@ class ChatWindow(QWidget):
         self._chat.apply_theme()
         if self._input_bar is not None:
             self._input_bar.apply_theme()
+
+        # Calendar button stays transparent regardless of theme
+        if hasattr(self, "bottom_bar"):
+            self.bottom_bar.setStyleSheet("background: transparent;")
         if hasattr(self, "_help_window") and self._help_window is not None:
             self._help_window.apply_theme()
 
@@ -313,6 +355,16 @@ class ChatWindow(QWidget):
         elif result.action == "help":
             self._open_help()
 
+        elif result.action == "schedule":
+            nl_text = result.response
+            reply = self._services.scheduler.parse_and_schedule(nl_text)
+            self._chat.append_message("egg", reply, self._now())
+            if hasattr(self, "_companion") and self._companion is not None:
+                self._companion.display_reply("Okiee")
+
+        elif result.action == "file":
+            self._open_knowledge_base()
+
         elif result.action.startswith("theme_"):
             theme_name = result.action.split("_", 1)[1]
             self._settings.set("theme", theme_name)
@@ -363,6 +415,8 @@ class ChatWindow(QWidget):
         self._input_bar.entry.setEnabled(enabled)
         self._input_bar.send_btn.setEnabled(enabled)
         self._input_bar.screenshot_btn.setEnabled(enabled)
+        if hasattr(self, "calendar_btn"):
+            self.calendar_btn.setEnabled(enabled)
         self._input_bar.set_voice_controls_enabled(enabled or keep_mic)
 
     def _export_chat(self) -> str:
@@ -430,6 +484,34 @@ class ChatWindow(QWidget):
         self._help_window.raise_()
         self._help_window.activateWindow()
 
+    def _open_schedule(self):
+        from ui.dialogs import ScheduleWindow
+        dialog = ScheduleWindow(
+            task_repository=self._services.task_repository,
+            parent=self,
+        )
+        dialog.exec()
+
+    def _open_knowledge_base(self):
+        from ui.dialogs import KnowledgeBaseWindow
+        dialog = KnowledgeBaseWindow(
+            knowledge_manager=self._services.knowledge_manager,
+            parent=self,
+        )
+        dialog.exec()
+
+    def _on_schedule_trigger_from_thread(self, message: str) -> None:
+        """Called from the scheduler background thread — emit a signal to cross into the Qt main thread."""
+        self._schedule_triggered.emit(message)
+
+    @Slot(str)
+    def _on_schedule_triggered(self, message: str) -> None:
+        """Called on the Qt main thread when a scheduled task fires."""
+        self._logger.info("Schedule reminder shown: %s", message)
+        self._chat.append_message("egg", message, self._now())
+        if hasattr(self, "_companion") and self._companion is not None:
+            self._companion.display_reply(message)
+
     def _on_help_clear(self):
         self._chat.clear_messages()
         if hasattr(self, "_help_window") and self._help_window is not None:
@@ -473,6 +555,8 @@ class ChatWindow(QWidget):
             self._voice.stop()
             if hasattr(self._services, "wake_word_service"):
                 self._services.wake_word_service.stop()
+            if hasattr(self._services, "scheduler"):
+                self._services.scheduler.stop()
             if hasattr(self, "_help_window") and self._help_window is not None:
                 self._help_window.close()
             self._logger.info("ChatWindow shutdown")

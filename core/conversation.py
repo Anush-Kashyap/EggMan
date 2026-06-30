@@ -11,6 +11,24 @@ class ConversationEngine:
 
     def get_reply(self, user_message: str, images: list[str] | None = None) -> str:
         start = perf_counter()
+
+        # Update SessionContext values
+        from backend.session.session_manager import SessionManager
+        session = SessionManager.get_instance().context
+        if not session.conversation_id:
+            session.conversation_id = "default_session_conv"
+
+        # Simple emotion detection based on message text
+        msg_lower = user_message.lower()
+        if any(w in msg_lower for w in ["happy", "great", "awesome", "good", "nice"]):
+            session.current_emotion = "happy"
+        elif any(w in msg_lower for w in ["sad", "bad", "sorry", "unhappy"]):
+            session.current_emotion = "sad"
+        elif any(w in msg_lower for w in ["angry", "mad", "hate", "annoyed"]):
+            session.current_emotion = "angry"
+        else:
+            session.current_emotion = "neutral"
+
         if self._ai_engine is None:
             response = self._fallback_provider.generate(AIRequest(user_message=user_message, images=images or []))
             reply = response.response_text if hasattr(response, 'response_text') else str(response)

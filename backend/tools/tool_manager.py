@@ -23,6 +23,12 @@ class ToolManager:
 
     def execute(self, name: str, *args, **kwargs) -> Any:
         self._logger.info("Tool execution started name=%s", name)
+
+        # Store active tool name in SessionContext temporary_context
+        from backend.session.session_manager import SessionManager
+        session = SessionManager.get_instance().context
+        session.temporary_context["last_executed_tool"] = name
+
         tool = self._registry.create(name)
         try:
             result = tool.execute(*args, **kwargs)

@@ -30,6 +30,7 @@ class TitleBar(QWidget):
         self._title_label = QLabel("EGGMAN")
         self._title_label.setFont(Theme.FONT_TITLE)
         layout.addWidget(self._title_label)
+
         layout.addStretch()
 
         self._min_btn = self._make_ctrl_btn("—", "min")

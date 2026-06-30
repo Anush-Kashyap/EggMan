@@ -13,12 +13,25 @@ class CommandHandler:
         if not text.startswith("/"):
             return CommandResult(handled=False)
 
+        import logging
+        logger = logging.getLogger("eggman")
+        logger.info("Slash command executed: %s", text.strip())
+
         parts = text.strip().split()
         cmd = parts[0].lower()
         args = parts[1:]
 
         if cmd == "/help":
             return CommandResult(handled=True, action="help")
+
+        if cmd == "/schedule":
+            nl_text = " ".join(args)
+            if not nl_text:
+                return CommandResult(handled=True, response="Usage: /schedule <natural language task>")
+            return CommandResult(handled=True, action="schedule", response=nl_text)
+
+        if cmd == "/file":
+            return CommandResult(handled=True, action="file")
 
         if cmd == "/clear":
             return CommandResult(handled=True, action="clear")

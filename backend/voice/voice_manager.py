@@ -56,6 +56,17 @@ class VoiceManager:
     def state(self) -> VoiceState:
         return self._state
 
+    @property
+    def _state(self) -> VoiceState:
+        from backend.session.session_manager import SessionManager
+        val = SessionManager.get_instance().context.voice_state
+        return VoiceState(val) if val else VoiceState.IDLE
+
+    @_state.setter
+    def _state(self, val: VoiceState) -> None:
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.voice_state = val.value
+
     def bind_callbacks(
         self,
         on_state_changed: VoiceStateCallback | None = None,
@@ -283,6 +294,11 @@ class VoiceManager:
     def _set_state(self, state: VoiceState) -> None:
         self._state = state
         logger.debug("VoiceManager state=%s", state.value)
+
+        # Update is_listening flag
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.is_listening = (state == VoiceState.LISTENING)
+
         if self._on_state_changed is not None:
             self._on_state_changed(state)
         for listener in self._state_changed_listeners:

@@ -58,6 +58,9 @@ class WakeWordService:
         self._paused = False
         self._is_running = True
 
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.wake_word_enabled = True
+
         self._thread = threading.Thread(target=self._run_loop, name="WakeWordServiceThread", daemon=True)
         self._thread.start()
         logger.info("Wake-word service started")
@@ -73,6 +76,10 @@ class WakeWordService:
 
         self._is_running = False
         self._thread = None
+
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.wake_word_enabled = False
+
         logger.info("Wake word system stopped")
 
     def pause(self) -> None:

@@ -53,6 +53,12 @@ class AIEngine:
             self._logger.exception("Provider initialization failed active=%s error=%s", self._provider_registry.active_provider_name(), exc)
             return None
         self._logger.info("Resolved provider: %s", provider.provider_name)
+
+        # Register resolved provider to SessionContext
+        provider_name = self._provider_registry.active_provider_name()
+        from backend.session.session_manager import SessionManager
+        SessionManager.get_instance().context.active_provider = provider_name
+
         return provider
 
     def generate(self, request: AIRequest) -> AIResponse:
@@ -65,8 +71,14 @@ class AIEngine:
         )
         self._logger.debug("AIEngine.generate entering")
 
+        # Save user message to SessionContext
+        from backend.session.session_manager import SessionManager
+        session = SessionManager.get_instance().context
+        session.last_user_message = request.user_message
+
         routed_response = self._route_tool_request(request)
         if routed_response is not None:
+            session.last_ai_message = routed_response.response_text
             return routed_response
 
         provider = self._resolve_provider()
@@ -86,6 +98,8 @@ class AIEngine:
             )
             if response.successful:
                 self._trigger_memory(prompt_payload)
+                session.active_chat_model = response.model_name
+                session.last_ai_message = response.response_text
             return response
         except Exception as exc:
             self._logger.exception("AI generation failed: %s", exc)

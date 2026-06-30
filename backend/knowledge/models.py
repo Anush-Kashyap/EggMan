@@ -1,0 +1,17 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Optional
+
+
+@dataclass
+class KBDocument:
+    """Represents an uploaded document in the Knowledge Base."""
+    id: Optional[int]
+    filename: str
+    file_type: str          # "pdf", "txt", "docx", etc.
+    file_size: int           # bytes
+    content: str             # extracted full text
+    source_path: str         # original file path
+    created_at: str
+    metadata: str = "{}"     # JSON string for extensibility
