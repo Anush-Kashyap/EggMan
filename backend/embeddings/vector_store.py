@@ -7,6 +7,10 @@ from backend.memory.models import MemoryRecord
 from core.paths import _path
 
 
+# TODO: Future milestone tasks:
+# 1. Integrate ChromaDB/VectorStore fully into the memory manager.
+# 2. Replace keyword-based lookup with vector similarity search.
+# 3. Use local Ollama embeddings (e.g., nomic-embed-text) for computing vectors.
 class VectorStore(Protocol):
     """Provider-independent interface for a vector-capable memory store."""
 

@@ -801,8 +801,9 @@ class KnowledgeBaseWindow(QDialog):
             try:
                 date_dt = datetime.fromisoformat(doc.created_at)
                 date_str = date_dt.strftime("%Y-%m-%d")
-            except:
-                date_str = doc.created_at[:10]
+            except (ValueError, TypeError) as exc:
+                logging.getLogger("eggman").debug("Failed to parse document ISO date %s: %s", doc.created_at, exc)
+                date_str = doc.created_at[:10] if doc.created_at else "Unknown"
                 
             size_str = self.format_size(doc.file_size)
             details_lbl = QLabel(f"Size: {size_str} | Uploaded: {date_str}")

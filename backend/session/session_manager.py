@@ -42,3 +42,23 @@ class SessionManager:
             self._context.last_ai_message = None
             self._context.temporary_context.clear()
             self._context.runtime_flags.clear()
+
+    def set_temporary_value(self, key: str, val: Any) -> None:
+        """Safely set a key-value pair in context temporary_context dictionary."""
+        with self._lock:
+            self._context.set_temporary_value(key, val)
+
+    def get_temporary_value(self, key: str, default: Any = None) -> Any:
+        """Safely get a value from context temporary_context dictionary."""
+        with self._lock:
+            return self._context.get_temporary_value(key, default)
+
+    def set_runtime_flag(self, key: str, val: Any) -> None:
+        """Safely set a key-value pair in context runtime_flags dictionary."""
+        with self._lock:
+            self._context.set_runtime_flag(key, val)
+
+    def get_runtime_flag(self, key: str, default: Any = None) -> Any:
+        """Safely get a value from context runtime_flags dictionary."""
+        with self._lock:
+            return self._context.get_runtime_flag(key, default)

@@ -178,3 +178,23 @@ class SessionContext:
             if self._last_ai_message != val:
                 logger.info("SessionContext: State updated - last_ai_message updated")
                 self._last_ai_message = val
+
+    def set_temporary_value(self, key: str, val: Any) -> None:
+        """Safely set a key-value pair in temporary_context dictionary under lock."""
+        with self._lock:
+            self.temporary_context[key] = val
+
+    def get_temporary_value(self, key: str, default: Any = None) -> Any:
+        """Safely get a value from temporary_context dictionary under lock."""
+        with self._lock:
+            return self.temporary_context.get(key, default)
+
+    def set_runtime_flag(self, key: str, val: Any) -> None:
+        """Safely set a key-value pair in runtime_flags dictionary under lock."""
+        with self._lock:
+            self.runtime_flags[key] = val
+
+    def get_runtime_flag(self, key: str, default: Any = None) -> Any:
+        """Safely get a value from runtime_flags dictionary under lock."""
+        with self._lock:
+            return self.runtime_flags.get(key, default)

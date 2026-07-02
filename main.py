@@ -343,7 +343,7 @@ class ChatWindow(QWidget):
         if not text:
             return
         from backend.session.session_manager import SessionManager
-        SessionManager.get_instance().context.temporary_context["voice_mode"] = False
+        SessionManager.get_instance().set_temporary_value("voice_mode", False)
         self._input_bar.entry.clear()
         self._submit_message(text)
 
@@ -400,7 +400,7 @@ class ChatWindow(QWidget):
     def _on_voice_text(self, text: str):
         self._logger.info("UI voice transcription ready len=%d", len(text))
         from backend.session.session_manager import SessionManager
-        SessionManager.get_instance().context.temporary_context["voice_mode"] = True
+        SessionManager.get_instance().set_temporary_value("voice_mode", True)
         self._input_bar.entry.clear()
         self._submit_message(text)
 
@@ -761,8 +761,9 @@ def _set_windows_app_id() -> None:
         return
     try:
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(WINDOWS_APP_ID)
-    except Exception:
-        return
+    except Exception as exc:
+        import logging
+        logging.getLogger("eggman").debug("Failed to set Windows App User Model ID: %s", exc)
 
 
 def create_application(argv: list[str]) -> QApplication:

@@ -10,6 +10,10 @@ from backend.memory.models import ImportanceLevel, MemoryCategory, MemoryRecord
 class MemoryExtractor:
     """Rule-based extractor that identifies useful facts for long-term memory."""
 
+    # TODO: Future milestone tasks:
+    # 1. Replace rule-based/regex extraction with structured JSON extraction using local LLM.
+    # 2. Keep this regex/rule-based extraction as a safe offline/performance fallback.
+
     _IGNORE_PHRASES = {
         "hello",
         "hi",

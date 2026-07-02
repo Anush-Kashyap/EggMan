@@ -13,6 +13,8 @@ from backend.ai.streaming import StreamingResponse
 from core.providers import BaseProvider
 
 
+# NOTE: Legacy code. This provider is currently unregistered and unused in the application container.
+# It is preserved to support future optional cloud-provider functionality.
 class GeminiProvider(BaseProvider):
     """Google Gemini provider using an API key and REST transport."""
 

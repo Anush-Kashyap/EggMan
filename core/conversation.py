@@ -46,7 +46,7 @@ class ConversationEngine:
         mode = self._detect_mode(user_message)
         
         # Check if voice mode is active
-        is_voice = bool(session.temporary_context.get("voice_mode", False))
+        is_voice = bool(session.get_temporary_value("voice_mode", False))
 
         # Dynamically build system prompt from modules
         from backend.profiler.performance_profiler import PerformanceProfiler
@@ -127,7 +127,7 @@ class ConversationEngine:
             session.current_emotion = "neutral"
 
         mode = self._detect_mode(user_message)
-        is_voice = bool(session.temporary_context.get("voice_mode", False))
+        is_voice = bool(session.get_temporary_value("voice_mode", False))
 
         from backend.profiler.performance_profiler import PerformanceProfiler
         PerformanceProfiler.get_instance().start_stage("Prompt Builder")

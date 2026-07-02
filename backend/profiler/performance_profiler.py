@@ -35,8 +35,9 @@ class PerformanceProfiler:
         try:
             if not SessionManager.get_instance().context.developer_mode:
                 return None
-        except Exception:
-            return None  # Safe fallback if context is not yet loaded
+        except Exception as exc:
+            logger.debug("Safe fallback: SessionManager context access failed (not loaded yet?): %s", exc)
+            return None
 
         with self._history_lock:
             self._counter += 1
@@ -123,6 +124,6 @@ class PerformanceProfiler:
                             gpu_name = " ".join(parts[1:])
                             if gpu_name:
                                 return gpu_name, vram_gb
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("GPU diagnostics query failed (safe fallback to N/A): %s", exc)
         return "N/A", "N/A"
