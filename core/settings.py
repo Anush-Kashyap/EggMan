@@ -14,6 +14,7 @@ class SettingsManager:
         "win_w": 270,
         "win_h": 500,
         "theme": "light",
+        "active_persona": "normal",
     }
 
     def __init__(self):

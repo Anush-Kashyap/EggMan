@@ -291,6 +291,16 @@ class TitleBar(QWidget):
         btn._kind = kind
         return btn
 
+    def inject_right_button(self, widget: QWidget) -> None:
+        """Insert a widget before the min/cls window controls (right side of title bar)."""
+        layout = self.layout()
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            if item and item.widget() is self._min_btn:
+                layout.insertWidget(i, widget)
+                return
+        layout.addWidget(widget)
+
     def apply_theme(self):
         self.setStyleSheet(f"background: {Theme.CREAM_DARK};")
         self._title_label.setStyleSheet(

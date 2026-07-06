@@ -50,8 +50,11 @@ class ConversationEngine:
 
         # Dynamically build system prompt from modules
         from backend.profiler.performance_profiler import PerformanceProfiler
+        from backend.personas.persona_manager import PersonaManager
         PerformanceProfiler.get_instance().start_stage("Prompt Builder")
-        system_prompt = self._prompt_builder.build_system_prompt(mode, is_voice, user_message)
+        persona_manager = PersonaManager.get_instance()
+        persona_prompt = persona_manager.get_active_persona_prompt()
+        system_prompt = self._prompt_builder.build_system_prompt(mode, is_voice, user_message, persona_prompt)
         PerformanceProfiler.get_instance().stop_stage("Prompt Builder")
 
         # Convert history tuples to MessageEntry list
@@ -98,6 +101,8 @@ class ConversationEngine:
             logger.info("[DEV MODE] Tokens sent: %d", tokens_sent)
             logger.info("[DEV MODE] Tokens received: %d", tokens_received)
             logger.info("[DEV MODE] Response latency: %.1f ms", elapsed_ms)
+            from backend.personas.persona_manager import PersonaManager
+            PersonaManager.get_instance().log_developer_info()
 
         if response.successful:
             reply = response.response_text if hasattr(response, 'response_text') else str(response)
@@ -130,8 +135,10 @@ class ConversationEngine:
         is_voice = bool(session.get_temporary_value("voice_mode", False))
 
         from backend.profiler.performance_profiler import PerformanceProfiler
+        from backend.personas.persona_manager import PersonaManager
         PerformanceProfiler.get_instance().start_stage("Prompt Builder")
-        system_prompt = self._prompt_builder.build_system_prompt(mode, is_voice, user_message)
+        persona_prompt = PersonaManager.get_instance().get_active_persona_prompt()
+        system_prompt = self._prompt_builder.build_system_prompt(mode, is_voice, user_message, persona_prompt)
         PerformanceProfiler.get_instance().stop_stage("Prompt Builder")
 
         history_entries = []

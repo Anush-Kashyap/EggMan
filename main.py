@@ -23,6 +23,8 @@ from core.themes import Theme, ThemeManager
 from backend.voice.voice_manager import VoiceState
 from ui.dialogs import SettingsDialog
 from ui.widgets import ChatDisplay, InputBar, TitleBar
+from ui.persona_switcher import PersonaMenuButton
+
 
 APP_NAME = "EggMan"
 APP_VERSION = "0.5"
@@ -81,6 +83,11 @@ class ChatWindow(QWidget):
         self._config.set("typing_delay", self._typing_delay_ms)
         self._config.save()
         self._logger.info("Application startup")
+
+        # Restore saved persona
+        from backend.personas.persona_manager import PersonaManager
+        saved_persona = str(self._settings.get("active_persona", "normal"))
+        PersonaManager.get_instance().set_active(saved_persona)
 
         self._apply_window_flags()
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -204,7 +211,7 @@ class ChatWindow(QWidget):
 
         bottom_layout.addWidget(self.calendar_btn)
         bottom_layout.addWidget(self.bug_btn)
-        bottom_layout.addStretch()
+        bottom_layout.addStretch(1)
 
         root_layout = QVBoxLayout(self._container)
         root_layout.setContentsMargins(0, 0, 0, 0)
@@ -216,6 +223,18 @@ class ChatWindow(QWidget):
         root_layout.addWidget(self.bottom_bar)
 
         self._update_container_style()
+
+        # Persona menu button — floats in the title bar right side (before min/cls)
+        from ui.persona_switcher import PersonaMenuButton as _PMB
+        self._persona_menu_btn = _PMB(
+            on_persona_selected=self._on_persona_selected,
+            parent=self._title_bar,
+        )
+        self._title_bar.inject_right_button(self._persona_menu_btn)
+
+        # Restore active persona in the panel
+        saved_key = str(self._settings.get("active_persona", "normal"))
+        self._persona_menu_btn.set_active_persona(saved_key)
 
     def _make_divider(self) -> QFrame:
         d = QFrame()
@@ -280,6 +299,8 @@ class ChatWindow(QWidget):
             self.bottom_bar.setStyleSheet("background: transparent;")
         if hasattr(self, "_help_window") and self._help_window is not None:
             self._help_window.apply_theme()
+        if hasattr(self, "_persona_menu_btn"):
+            self._persona_menu_btn.apply_theme()
 
     def _post_startup_init_message(self):
         msg = (
@@ -337,6 +358,44 @@ class ChatWindow(QWidget):
             f"⚠️ Startup encountered an error.\n\n{error}\n\nSome features may be unavailable.",
             self._now(),
         )
+
+    def _on_persona_selected(self, key: str) -> None:
+        """Called when the user clicks a persona card in the switcher bar."""
+        from backend.personas.persona_manager import PersonaManager
+        manager = PersonaManager.get_instance()
+        prev = manager.get_active()
+        switched = manager.set_active(key)
+        if not switched:
+            return
+
+        # Persist the selection
+        self._settings.set("active_persona", key)
+        self._settings.save()
+
+        new_persona = manager.get_active()
+        self._logger.info(
+            "ChatWindow: Persona switched old=%s new=%s",
+            prev.key,
+            new_persona.key,
+        )
+
+        # Post a brief in-chat announcement from EggMan
+        announcements = {
+            "normal":  f"Back to being just me. 🥚",
+            "coding":  f"Alright, switching to Coding Guy mode. 💻 Let's build something.",
+            "party":   f"Helloooo! Party Boi is HERE 🍺🎉 Let's gooo!",
+        }
+        msg = announcements.get(key, f"Switched to {new_persona.display_name}.")
+        self._chat.append_message("egg", msg, self._now())
+
+        # Sync companion avatar
+        if hasattr(self, "_companion") and self._companion is not None:
+            self._companion.apply_persona(new_persona.avatar_path)
+
+        # Sync the panel active indicator (in case selection came from outside)
+        if hasattr(self, "_persona_menu_btn"):
+            self._persona_menu_btn.set_active_persona(key)
+
 
     def _on_send(self):
         text = self._input_bar.entry.text().strip()
@@ -815,6 +874,13 @@ def main() -> int:
     # Show companion window
     companion.show()
     chat_window._logger.info("Desktop companion initialized and shown on startup")
+
+    # Restore companion avatar from persisted persona
+    from backend.personas.persona_manager import PersonaManager as _StartupPM
+    _active_persona = _StartupPM.get_instance().get_active()
+    if _active_persona.avatar_path:
+        companion.apply_persona(_active_persona.avatar_path)
+
 
     return app.exec()
 

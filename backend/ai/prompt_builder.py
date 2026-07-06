@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 logger = logging.getLogger("eggman")
 
@@ -112,7 +112,7 @@ class PromptBuilder:
         self.response_rules = ResponseRulesModule()
         self.voice_rules = VoiceRulesModule()
 
-    def build_system_prompt(self, mode: str, is_voice: bool, user_message: str) -> str:
+    def build_system_prompt(self, mode: str, is_voice: bool, user_message: str, persona_prompt: Optional[str] = None) -> str:
         """Assembles prompt sections dynamically."""
         logger.info("PromptBuilder: Assembling system prompt sections mode=%s, is_voice=%s", mode, is_voice)
         
@@ -125,6 +125,10 @@ class PromptBuilder:
             self.tool_rules.get_prompt(),
             self.response_rules.get_prompt()
         ]
+
+        # Inject the active persona prompt module right after core identity
+        if persona_prompt:
+            sections.insert(1, persona_prompt)
 
         if is_voice:
             sections.append(self.voice_rules.get_prompt())

@@ -292,12 +292,41 @@ class DesktopCompanion(QWidget):
             pixmap = QPixmap(path)
             self.egg_label.setPixmap(pixmap)
 
+    def apply_persona(self, avatar_path: str | None) -> None:
+        """Switch the companion's state images when a persona is selected.
+
+        - Normal persona (avatar_path=None): restores the default inactive/active/thinking images.
+        - Custom persona: uses their avatar for inactive and active states.
+          The thinking state is NOT changed here; it is handled in _on_generation_started.
+        """
+        from core.paths import ASSETS_DIR
+        if avatar_path:
+            self._state_images["inactive"] = avatar_path
+            self._state_images["active"] = avatar_path
+        else:
+            self._state_images["inactive"] = str(ASSETS_DIR / "inactive.png")
+            self._state_images["active"] = str(ASSETS_DIR / "active.png")
+
+        # Always restore thinking.png for the thinking state so normal persona still works
+        self._state_images["thinking"] = str(ASSETS_DIR / "thinking.png")
+
+        # Refresh current visual if not mid-generation
+        if not self._is_thinking:
+            self.set_egg_state("inactive")
+
+
     def display_reply(self, text: str) -> None:
         self.speech_bubble.show_text(text)
 
     def _on_generation_started(self) -> None:
         self._is_thinking = True
-        self.set_egg_state("thinking")
+        # Only show the thinking image for the default Normal persona;
+        # custom personas (Coding Guy, Party Boi) keep their avatar during generation.
+        from backend.personas.persona_manager import PersonaManager
+        active_key = PersonaManager.get_instance().get_active().key
+        if active_key == "normal":
+            self.set_egg_state("thinking")
+        # Always show the typing indicator in the speech bubble
         self.speech_bubble.show_typing_indicator()
 
     def _on_generation_finished(self) -> None:
