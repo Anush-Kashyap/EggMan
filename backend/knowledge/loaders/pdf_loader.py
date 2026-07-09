@@ -36,3 +36,19 @@ class PDFLoader(BaseDocumentLoader):
         except Exception as e:
             logger.error("PDFLoader: failed to extract text from %s: %s", file_path, e)
             raise e
+
+    def load_pages(self, file_path: Path) -> List[tuple[int, str]]:
+        """Return per-page text with page numbers."""
+        pages: List[tuple[int, str]] = []
+        try:
+            with open(file_path, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                for i in range(len(reader.pages)):
+                    text = reader.pages[i].extract_text()
+                    if text:
+                        pages.append((i + 1, text))
+            logger.info("PDFLoader: extracted %d pages from %s", len(pages), file_path.name)
+            return pages
+        except Exception as e:
+            logger.error("PDFLoader: failed to extract pages from %s: %s", file_path, e)
+            raise e

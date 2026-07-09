@@ -21,12 +21,14 @@ from PySide6.QtWidgets import (
     QListWidget,
     QSplitter,
     QGridLayout,
+    QProgressBar,
 )
 from datetime import datetime
 from pathlib import Path
 import logging
 
 from backend.ai.ollama_provider import OllamaProvider
+from backend.knowledge.vector_store import SQLiteVectorStore
 from core.config import ConfigManager
 from core.settings import SettingsManager
 from core.themes import Theme, ThemeManager
@@ -654,6 +656,25 @@ class DropArea(QLabel):
         """)
 
 
+STATUS_COLORS = {
+    "waiting": "#FFA726",
+    "parsing": "#42A5F5",
+    "chunking": "#AB47BC",
+    "embedding": "#26A69A",
+    "indexed": "#66BB6A",
+    "failed": "#EF5350",
+}
+
+STATUS_LABELS = {
+    "waiting": "Waiting",
+    "parsing": "Parsing...",
+    "chunking": "Chunking...",
+    "embedding": "Embedding...",
+    "indexed": "Indexed",
+    "failed": "Failed",
+}
+
+
 class KnowledgeBaseWindow(QDialog):
     """Knowledge Base window for uploading and managing documents."""
 
@@ -663,16 +684,22 @@ class KnowledgeBaseWindow(QDialog):
         
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setFixedSize(340, 450)
+        self.setFixedSize(380, 480)
         
         if parent:
             pg = parent.geometry()
-            cx = pg.x() + (pg.width() - 340) // 2
-            cy = pg.y() + (pg.height() - 450) // 2
+            cx = pg.x() + (pg.width() - 380) // 2
+            cy = pg.y() + (pg.height() - 480) // 2
             self.move(cx, cy)
             
         self._build_ui()
         self.load_documents()
+
+        # Polling timer to refresh document status during background indexing
+        self._refresh_timer = QTimer(self)
+        self._refresh_timer.setInterval(1500)
+        self._refresh_timer.timeout.connect(self._poll_refresh)
+        self._refresh_timer.start()
 
     def _build_ui(self) -> None:
         base_layout = QVBoxLayout(self)
@@ -751,6 +778,14 @@ class KnowledgeBaseWindow(QDialog):
             }}
         """)
 
+    def closeEvent(self, event):
+        self._refresh_timer.stop()
+        super().closeEvent(event)
+
+    def _poll_refresh(self) -> None:
+        """Periodically check for status changes during background indexing."""
+        self.load_documents()
+
     def browse_files(self) -> None:
         file_path, _ = QFileDialog.getOpenFileName(
             self, "Select PDF Document", "", "PDF Files (*.pdf)"
@@ -781,6 +816,7 @@ class KnowledgeBaseWindow(QDialog):
             self.scroll_layout.addWidget(no_docs_lbl)
             return
 
+        has_pending = False
         for doc in docs:
             doc_widget = QWidget()
             doc_item_layout = QHBoxLayout(doc_widget)
@@ -806,20 +842,30 @@ class KnowledgeBaseWindow(QDialog):
                 date_str = doc.created_at[:10] if doc.created_at else "Unknown"
                 
             size_str = self.format_size(doc.file_size)
+            status_color = STATUS_COLORS.get(doc.status, "#999")
+            status_label = STATUS_LABELS.get(doc.status, doc.status)
+            chunk_info = f" | {doc.chunk_count} chunks" if doc.chunk_count > 0 else ""
             details_lbl = QLabel(f"Size: {size_str} | Uploaded: {date_str}")
             details_lbl.setFont(QFont("Segoe UI", 8))
             details_lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
             details_lbl.setWordWrap(True)
             
+            status_lbl = QLabel(status_label)
+            status_lbl.setFont(QFont("Segoe UI", 8, QFont.Bold))
+            status_lbl.setStyleSheet(f"color: {status_color};")
+            
             text_layout.addWidget(title_lbl)
             text_layout.addWidget(details_lbl)
+            text_layout.addWidget(status_lbl)
             
             doc_item_layout.addWidget(text_widget, stretch=1)
             
+            # Delete button (only enabled for indexed/failed docs)
             del_btn = QPushButton("❌")
             del_btn.setFixedSize(20, 20)
             del_btn.setFont(QFont("Segoe UI", 8))
             del_btn.setCursor(Qt.PointingHandCursor)
+            del_btn.setEnabled(doc.status in ("indexed", "failed"))
             del_btn.setStyleSheet(f"""
                 QPushButton {{
                     background: transparent;
@@ -828,6 +874,9 @@ class KnowledgeBaseWindow(QDialog):
                 QPushButton:hover {{
                     background: {Theme.CTRL_HOVER_CLS};
                     border-radius: 4px;
+                }}
+                QPushButton:disabled {{
+                    opacity: 0.3;
                 }}
             """)
             del_btn.clicked.connect(lambda checked=False, tid=doc.id: self.delete_document(tid))
@@ -839,8 +888,18 @@ class KnowledgeBaseWindow(QDialog):
             divider.setFrameShape(QFrame.HLine)
             divider.setStyleSheet(f"background-color: {Theme.BORDER};")
             self.scroll_layout.addWidget(divider)
+
+            if doc.status not in ("indexed", "failed"):
+                has_pending = True
             
         self.scroll_layout.addStretch()
+
+        # Keep polling if there are pending documents
+        if has_pending:
+            if not self._refresh_timer.isActive():
+                self._refresh_timer.start()
+        else:
+            self._refresh_timer.stop()
 
     def delete_document(self, doc_id: int) -> None:
         self._manager.remove_document(doc_id)
@@ -1026,6 +1085,7 @@ class EggInspectorWindow(QDialog):
         # Initialize Tabs
         self._init_performance_tab()
         self._init_startup_tab()
+        self._init_knowledge_tab()
         self._init_placeholder_tabs()
 
         # 2. Status Bar live panel at bottom
@@ -1149,6 +1209,37 @@ class EggInspectorWindow(QDialog):
             layout.addWidget(lbl)
             self.tabs.addTab(widget, name)
 
+    def _init_knowledge_tab(self) -> None:
+        """Build the Knowledge System diagnostics panel."""
+        kb_widget = QWidget()
+        layout = QVBoxLayout(kb_widget)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        title_lbl = QLabel("Knowledge System Diagnostics")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        layout.addWidget(title_lbl)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(
+            f"border: 1px solid {Theme.BORDER}; border-radius: 6px; background: {Theme.CREAM_DARK};"
+        )
+
+        content = QWidget()
+        content.setStyleSheet("background: transparent;")
+        grid = QGridLayout(content)
+        grid.setContentsMargins(16, 16, 16, 16)
+        grid.setVerticalSpacing(10)
+        grid.setHorizontalSpacing(24)
+
+        scroll.setWidget(content)
+        self._kb_scroll = scroll
+        layout.addWidget(scroll, stretch=1)
+
+        self.tabs.addTab(kb_widget, "📚 Knowledge")
+
     def _build_status_panel(self) -> None:
         self.status_panel = QFrame()
         self.status_panel.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
@@ -1243,6 +1334,9 @@ class EggInspectorWindow(QDialog):
 
         # Refresh startup panel (only needed until it's finalized)
         self._refresh_startup_panel()
+
+        # Refresh Knowledge tab
+        self._refresh_knowledge_panel()
 
     def _refresh_startup_panel(self) -> None:
         """Rebuild the startup timing panel content from the StartupService profile."""
@@ -1605,6 +1699,95 @@ class EggInspectorWindow(QDialog):
         main_layout.addStretch()
 
         self.details_scroll.setWidget(scroll_content)
+
+    def _refresh_knowledge_panel(self) -> None:
+        """Update the Knowledge tab with current stats from the vector store and knowledge manager."""
+        if not hasattr(self, "_kb_grid"):
+            return
+
+        services = self._services
+        if not hasattr(services, "knowledge_manager"):
+            return
+
+        km = services.knowledge_manager
+        vs = getattr(services, "vector_store", None)
+        es = getattr(services, "embedding_service", None)
+        retriever = getattr(services, "retriever", None)
+
+        # Collect stats
+        docs = km.get_all_documents()
+        total_docs = len(docs)
+        indexed_docs = sum(1 for d in docs if d.status == "indexed")
+        pending_docs = sum(1 for d in docs if d.status not in ("indexed", "failed"))
+
+        vector_count = vs.get_vector_count() if vs else 0
+        chunk_count = vs.get_chunk_count() if vs else 0
+        avg_chunk_size = vs.get_average_chunk_size() if vs else 0.0
+        db_size = vs.get_database_size() if vs else 0
+
+        model_name = es.model_name() if es else "N/A"
+        retrieval_stats = retriever.last_stats if retriever else None
+
+        # Build data rows
+        rows: list[tuple[str, str]] = [
+            ("Documents (Total)", str(total_docs)),
+            ("Documents (Indexed)", str(indexed_docs)),
+            ("Documents (Indexing)", str(pending_docs)),
+            ("Embedding Model", model_name),
+            ("Vector Count", str(vector_count)),
+            ("Chunk Count", str(chunk_count)),
+            ("Avg Chunk Size", f"{avg_chunk_size:.0f} chars"),
+            ("Database Size", f"{db_size / 1024:.1f} KB" if db_size > 0 else "N/A"),
+        ]
+
+        if retrieval_stats:
+            rows.append(("Top-K", str(retrieval_stats.top_k)))
+            rows.append(("Last Query", retrieval_stats.query[:40] + "..." if len(retrieval_stats.query) > 40 else retrieval_stats.query))
+            rows.append(("Embedding Duration", f"{retrieval_stats.embedding_duration_ms:.1f} ms"))
+            rows.append(("Search Duration", f"{retrieval_stats.search_duration_ms:.1f} ms"))
+            rows.append(("Avg Similarity Score", f"{retrieval_stats.average_score:.3f}" if retrieval_stats.results else "N/A"))
+            if retrieval_stats.results:
+                rows.append(("Retrieved Chunks", str(len(retrieval_stats.results))))
+                chunk_ids = ", ".join(str(r.chunk.chunk_index) for r in retrieval_stats.results[:10])
+                rows.append(("Chunk IDs", chunk_ids))
+                scores = ", ".join(f"{r.score:.3f}" for r in retrieval_stats.results[:10])
+                rows.append(("Similarity Scores", scores))
+
+        # Rebuild grid
+        old_w = self._kb_grid.parent()
+        new_content = QWidget()
+        new_content.setStyleSheet("background: transparent;")
+        new_grid = QGridLayout(new_content)
+        new_grid.setContentsMargins(16, 16, 16, 16)
+        new_grid.setVerticalSpacing(10)
+        new_grid.setHorizontalSpacing(24)
+
+        for row_idx, (label, value) in enumerate(rows):
+            name_lbl = QLabel(label)
+            name_lbl.setFont(QFont("Segoe UI", 10))
+            name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            val_lbl = QLabel(value)
+            val_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            val_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            val_lbl.setAlignment(Qt.AlignRight)
+            new_grid.addWidget(name_lbl, row_idx, 0)
+            new_grid.addWidget(val_lbl, row_idx, 1)
+
+        # Replace the scroll content
+        for i in range(len(rows), self._kb_grid.count()):
+            item = self._kb_grid.itemAt(i)
+            if item and item.widget():
+                item.widget().deleteLater()
+
+        # Swap the grid
+        scroll_content = self._kb_grid.parent()
+        if scroll_content:
+            scroll_content_layout = scroll_content.layout()
+            if scroll_content_layout:
+                scroll_content_layout.removeItem(self._kb_grid)
+        self._kb_grid = new_grid
+        if scroll_content:
+            scroll_content_layout.addLayout(self._kb_grid)
 
     def _on_compare_clicked(self) -> None:
         """Show comparison dialog comparing this request's stats to history averages."""

@@ -14,4 +14,6 @@ class KBDocument:
     content: str             # extracted full text
     source_path: str         # original file path
     created_at: str
+    status: str = "indexed"  # waiting, parsing, chunking, embedding, indexed, failed
+    chunk_count: int = 0
     metadata: str = "{}"     # JSON string for extensibility

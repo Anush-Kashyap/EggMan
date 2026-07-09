@@ -15,6 +15,7 @@ hiddenimports = [
     "onnxruntime.capi.onnxruntime_pybind11_state",
     "scipy",
     "sklearn",
+    "numpy",
     *collect_submodules("openwakeword"),
     *collect_submodules("backend"),
     *collect_submodules("core"),

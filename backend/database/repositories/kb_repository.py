@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-import logging
 import json
+import logging
 from datetime import datetime
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+
 from backend.database.database import DatabaseManager
 from backend.knowledge.models import KBDocument
 
@@ -11,10 +12,25 @@ logger = logging.getLogger("eggman")
 
 
 class KBRepository:
-    """Repository for persistent Knowledge Base documents in SQLite."""
+    """Repository for persistent Knowledge Base documents in eggman.db."""
 
     def __init__(self, database_manager: DatabaseManager) -> None:
         self._database_manager = database_manager
+
+    @staticmethod
+    def _row_to_document(row: Any) -> KBDocument:
+        return KBDocument(
+            id=row["id"],
+            filename=row["filename"],
+            file_type=row["file_type"],
+            file_size=row["file_size"],
+            content=row["content"],
+            source_path=row["source_path"],
+            created_at=row["created_at"],
+            status=row["status"],
+            chunk_count=row["chunk_count"],
+            metadata=row["metadata"],
+        )
 
     def save_document(
         self,
@@ -23,22 +39,23 @@ class KBRepository:
         file_size: int,
         content: str,
         source_path: str,
-        metadata_dict: Optional[dict] = None
+        metadata_dict: Optional[dict] = None,
     ) -> KBDocument:
         created_at = datetime.now().isoformat()
         metadata_str = json.dumps(metadata_dict or {})
+        status = metadata_dict.get("status", "indexed") if isinstance(metadata_dict, dict) else "indexed"
         connection = self._database_manager.get_connection()
         try:
             cursor = connection.cursor()
             cursor.execute(
-                """INSERT INTO kb_documents 
-                (filename, file_type, file_size, content, source_path, created_at, metadata) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                (filename, file_type, file_size, content, source_path, created_at, metadata_str),
+                """INSERT INTO kb_documents
+                (filename, file_type, file_size, content, source_path, created_at, status, metadata)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (filename, file_type, file_size, content, source_path, created_at, status, metadata_str),
             )
             connection.commit()
             doc_id = cursor.lastrowid
-            logger.info("KBRepository: database record added: ID=%s, filename=%s", doc_id, filename)
+            logger.info("KBRepository: record added id=%s filename=%s status=%s", doc_id, filename, status)
             return KBDocument(
                 id=doc_id,
                 filename=filename,
@@ -47,7 +64,8 @@ class KBRepository:
                 content=content,
                 source_path=source_path,
                 created_at=created_at,
-                metadata=metadata_str
+                status=status,
+                metadata=metadata_str,
             )
         finally:
             connection.close()
@@ -56,22 +74,9 @@ class KBRepository:
         connection = self._database_manager.get_connection()
         try:
             rows = connection.execute(
-                "SELECT id, filename, file_type, file_size, content, source_path, created_at, metadata FROM kb_documents ORDER BY id DESC"
+                "SELECT id, filename, file_type, file_size, content, source_path, created_at, status, chunk_count, metadata FROM kb_documents ORDER BY id DESC"
             ).fetchall()
-            logger.info("KBRepository: load complete: count=%d", len(rows))
-            return [
-                KBDocument(
-                    id=row["id"],
-                    filename=row["filename"],
-                    file_type=row["file_type"],
-                    file_size=row["file_size"],
-                    content=row["content"],
-                    source_path=row["source_path"],
-                    created_at=row["created_at"],
-                    metadata=row["metadata"]
-                )
-                for row in rows
-            ]
+            return [self._row_to_document(row) for row in rows]
         finally:
             connection.close()
 
@@ -79,21 +84,35 @@ class KBRepository:
         connection = self._database_manager.get_connection()
         try:
             row = connection.execute(
-                "SELECT id, filename, file_type, file_size, content, source_path, created_at, metadata FROM kb_documents WHERE id = ?",
-                (doc_id,)
+                "SELECT id, filename, file_type, file_size, content, source_path, created_at, status, chunk_count, metadata FROM kb_documents WHERE id = ?",
+                (doc_id,),
             ).fetchone()
-            if row:
-                return KBDocument(
-                    id=row["id"],
-                    filename=row["filename"],
-                    file_type=row["file_type"],
-                    file_size=row["file_size"],
-                    content=row["content"],
-                    source_path=row["source_path"],
-                    created_at=row["created_at"],
-                    metadata=row["metadata"]
-                )
-            return None
+            return self._row_to_document(row) if row else None
+        finally:
+            connection.close()
+
+    def update_status(self, doc_id: int, status: str) -> None:
+        connection = self._database_manager.get_connection()
+        try:
+            connection.execute("UPDATE kb_documents SET status = ? WHERE id = ?", (status, doc_id))
+            connection.commit()
+            logger.debug("KBRepository: updated status doc_id=%s status=%s", doc_id, status)
+        finally:
+            connection.close()
+
+    def update_content(self, doc_id: int, content: str) -> None:
+        connection = self._database_manager.get_connection()
+        try:
+            connection.execute("UPDATE kb_documents SET content = ? WHERE id = ?", (content, doc_id))
+            connection.commit()
+        finally:
+            connection.close()
+
+    def update_chunk_count(self, doc_id: int, count: int) -> None:
+        connection = self._database_manager.get_connection()
+        try:
+            connection.execute("UPDATE kb_documents SET chunk_count = ? WHERE id = ?", (count, doc_id))
+            connection.commit()
         finally:
             connection.close()
 
@@ -105,46 +124,25 @@ class KBRepository:
             connection.commit()
             success = cursor.rowcount > 0
             if success:
-                logger.info("KBRepository: deleted document record ID=%s", doc_id)
+                logger.info("KBRepository: deleted document id=%s", doc_id)
             return success
         finally:
             connection.close()
 
     def search_documents(self, keywords: List[str], limit: int = 5) -> List[KBDocument]:
-        """Simple keyword-based content search matching ALL keywords if possible, falling back to ANY."""
         if not keywords:
             return []
-        
         connection = self._database_manager.get_connection()
         try:
-            # Let's perform a simple content query
-            # We will fetch documents containing any of the keywords and rank/filter them in memory
-            # This is robust and doesn't rely on complex SQLite extensions which might not be compiled.
             rows = connection.execute(
-                "SELECT id, filename, file_type, file_size, content, source_path, created_at, metadata FROM kb_documents"
+                "SELECT id, filename, file_type, file_size, content, source_path, created_at, status, chunk_count, metadata FROM kb_documents"
             ).fetchall()
-            
             scored_docs = []
             for row in rows:
                 content_lower = row["content"].lower()
-                matches = 0
-                for kw in keywords:
-                    if kw.lower() in content_lower:
-                        matches += 1
+                matches = sum(1 for kw in keywords if kw.lower() in content_lower)
                 if matches > 0:
-                    doc = KBDocument(
-                        id=row["id"],
-                        filename=row["filename"],
-                        file_type=row["file_type"],
-                        file_size=row["file_size"],
-                        content=row["content"],
-                        source_path=row["source_path"],
-                        created_at=row["created_at"],
-                        metadata=row["metadata"]
-                    )
-                    scored_docs.append((matches, doc))
-            
-            # Sort by matches count descending
+                    scored_docs.append((matches, self._row_to_document(row)))
             scored_docs.sort(key=lambda x: x[0], reverse=True)
             return [doc for score, doc in scored_docs[:limit]]
         finally:

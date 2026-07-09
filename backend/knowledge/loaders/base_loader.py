@@ -21,3 +21,8 @@ class BaseDocumentLoader(ABC):
     def load(self, file_path: Path) -> str:
         """Extract and return the full text content of the document at *file_path*."""
         ...
+
+    def load_pages(self, file_path: Path) -> List[tuple[int, str]]:
+        """Optional: return list of (page_number, text). Default returns single page."""
+        text = self.load(file_path)
+        return [(1, text)]

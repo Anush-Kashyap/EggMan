@@ -57,13 +57,14 @@ class ContextBuilder:
 
         prompt_with_memories = self._inject_memories(base_prompt, retrieved_memories)
 
-        # Inject KB document context if available
+        # Inject KB document context if available (semantic or keyword fallback)
         kb_injected = False
         if self._knowledge_manager is not None:
             from backend.profiler.performance_profiler import PerformanceProfiler
-            PerformanceProfiler.get_instance().start_stage("Knowledge Retrieval")
+            perf = PerformanceProfiler.get_instance()
+            perf.start_stage("Knowledge Retrieval")
             kb_contexts = self._knowledge_manager.search(user_message)
-            PerformanceProfiler.get_instance().stop_stage("Knowledge Retrieval")
+            perf.stop_stage("Knowledge Retrieval")
             if kb_contexts:
                 prompt_with_memories = self._inject_kb_contexts(prompt_with_memories, kb_contexts)
                 kb_injected = True

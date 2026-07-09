@@ -12,6 +12,13 @@ from backend.context.context_builder import ContextBuilder
 from backend.database.database import DatabaseManager
 from backend.database.repositories.conversation_repository import ConversationRepository
 from backend.emotion.emotion_engine import EmotionEngine
+from backend.knowledge.chunker import Chunker
+from backend.knowledge.document_index import DocumentIndex
+from backend.knowledge.document_parser import DocumentParser
+from backend.knowledge.embedding_provider import OllamaEmbeddingProvider
+from backend.knowledge.embedding_service import EmbeddingService
+from backend.knowledge.retriever import Retriever
+from backend.knowledge.vector_store import SQLiteVectorStore
 from backend.memory.memory_extractor import MemoryExtractor
 from backend.memory.memory_manager import MemoryManager
 from backend.memory.memory_repository import MemoryRepository
@@ -27,7 +34,7 @@ from core.commands import CommandHandler
 from core.config import ConfigManager
 from core.conversation import ConversationEngine
 from core.logger import AppLogger
-from core.paths import APP_ROOT, IS_FROZEN, RESOURCE_ROOT, USER_DATA_ROOT
+from core.paths import APP_ROOT, IS_FROZEN, RESOURCE_ROOT, USER_DATA_ROOT, _path
 from core.providers import BaseProvider, LocalProvider
 from core.settings import SettingsManager
 
@@ -69,14 +76,43 @@ class AppContainer:
 
         self.kb_repository = KBRepository(self.database_manager)
         self.document_manager = DocumentManager()
-        self.knowledge_manager = KnowledgeManager(self.kb_repository, self.document_manager)
+
+        # Knowledge System v1: semantic knowledge with embeddings
+        knowledge_db_path = Path(_path("data", "knowledge.db"))
+        self.vector_store = SQLiteVectorStore(db_path=knowledge_db_path)
+        self.document_parser = DocumentParser(document_manager=self.document_manager)
+        self.chunker = Chunker(chunk_size=512, overlap=64)
+
+        embedding_model = str(self.config_manager.get("embedding_model", "nomic-embed-text"))
+        ollama_base = str(self.config_manager.get("ollama_base_url", "http://localhost:11434"))
+        self.ollama_embedding_provider = OllamaEmbeddingProvider(
+            base_url=ollama_base,
+            model=embedding_model,
+        )
+        self.embedding_service = EmbeddingService(provider=self.ollama_embedding_provider)
+        self.retriever = Retriever(
+            vector_store=self.vector_store,
+            embedding_service=self.embedding_service,
+            top_k=5,
+        )
+        self.document_index = DocumentIndex(
+            document_parser=self.document_parser,
+            chunker=self.chunker,
+            embedding_service=self.embedding_service,
+            vector_store=self.vector_store,
+        )
+        self.knowledge_manager = KnowledgeManager(
+            repository=self.kb_repository,
+            document_manager=self.document_manager,
+            document_index=self.document_index,
+            retriever=self.retriever,
+            vector_store=self.vector_store,
+        )
 
         self.memory_repository = MemoryRepository(self.database_manager)
         self.memory_extractor = MemoryExtractor()
         self.memory_manager = MemoryManager(repository=self.memory_repository, extractor=self.memory_extractor)
         self.memory_service = MemoryService(memory_manager=self.memory_manager)
-        self.embedding_service = None
-        self.vector_store = None
         self.retrieval_service = RetrievalService(memory_manager=self.memory_manager)
         self.context_builder = ContextBuilder(retrieval_service=self.retrieval_service, knowledge_manager=self.knowledge_manager)
         self.prompt_pipeline = PromptPipeline()

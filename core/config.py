@@ -20,6 +20,7 @@ class ConfigManager:
         "wake_word_enabled": True,
         "wake_word_name": "alexa",
         "wake_word_threshold": 0.5,
+        "embedding_model": "nomic-embed-text",
     }
 
     def __init__(self, config_path: str | os.PathLike | None = None):

@@ -20880,3 +20880,187 @@ ValueError: Unknown application: capcut. Registered applications: chrome, notepa
 2026-06-30 19:37:12,272 | INFO | Task Scheduler stopped
 2026-06-30 19:37:12,272 | INFO | ChatWindow shutdown
 2026-06-30 19:37:12,359 | INFO | Detector initialized threshold=0.50
+2026-07-09 16:15:36,476 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:15:36,499 | INFO | Task Scheduler started
+2026-07-09 16:15:36,502 | INFO | Schedule loaded: count=0
+2026-07-09 16:15:36,508 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:15:36,510 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:15:38,504 | INFO | Schedule loaded: count=0
+2026-07-09 16:15:38,588 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:15:38,588 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:15:40,504 | INFO | Schedule loaded: count=0
+2026-07-09 16:15:40,625 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:15:40,625 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2036.1
+2026-07-09 16:15:40,625 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2036.2
+2026-07-09 16:15:40,625 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:15:40,625 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:15:40,631 | INFO | SessionContext: session created
+2026-07-09 16:15:40,631 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:15:40,673 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:15:40,673 | INFO | Application services initialized
+2026-07-09 16:15:57,207 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:15:57,219 | INFO | Task Scheduler started
+2026-07-09 16:15:57,219 | INFO | Schedule loaded: count=0
+2026-07-09 16:15:57,227 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:15:57,230 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:15:59,223 | INFO | Schedule loaded: count=0
+2026-07-09 16:15:59,292 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:15:59,292 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:16:01,224 | INFO | Schedule loaded: count=0
+2026-07-09 16:16:01,337 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:16:01,337 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2045.0
+2026-07-09 16:16:01,337 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2045.1
+2026-07-09 16:16:01,337 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:16:01,337 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:16:01,344 | INFO | SessionContext: session created
+2026-07-09 16:16:01,344 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:16:01,421 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:16:01,421 | INFO | Application services initialized
+2026-07-09 16:16:27,277 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:16:27,291 | INFO | Task Scheduler started
+2026-07-09 16:16:27,292 | INFO | Schedule loaded: count=0
+2026-07-09 16:16:27,299 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:16:27,301 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:16:29,294 | INFO | Schedule loaded: count=0
+2026-07-09 16:16:29,345 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:16:29,345 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:16:31,295 | INFO | Schedule loaded: count=0
+2026-07-09 16:16:31,376 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:16:31,376 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2030.8
+2026-07-09 16:16:31,376 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2030.9
+2026-07-09 16:16:31,376 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:16:31,376 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:16:31,380 | INFO | SessionContext: session created
+2026-07-09 16:16:31,381 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:16:31,424 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:16:31,424 | INFO | Application services initialized
+2026-07-09 16:19:29,674 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:19:29,697 | INFO | Task Scheduler started
+2026-07-09 16:19:29,698 | INFO | Schedule loaded: count=0
+2026-07-09 16:19:29,709 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:19:29,713 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:19:31,699 | INFO | Schedule loaded: count=0
+2026-07-09 16:19:31,771 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:19:31,771 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:19:33,702 | INFO | Schedule loaded: count=0
+2026-07-09 16:19:33,810 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:19:33,810 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2038.4
+2026-07-09 16:19:33,810 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2038.5
+2026-07-09 16:19:33,810 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:19:33,810 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:19:33,817 | INFO | SessionContext: session created
+2026-07-09 16:19:33,817 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:19:33,917 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:19:33,917 | INFO | Application services initialized
+2026-07-09 16:51:45,811 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:51:45,850 | INFO | Task Scheduler started
+2026-07-09 16:51:45,851 | INFO | Schedule loaded: count=0
+2026-07-09 16:51:45,861 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:51:45,864 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:51:47,853 | INFO | Schedule loaded: count=0
+2026-07-09 16:51:47,923 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:51:47,923 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:51:49,854 | INFO | Schedule loaded: count=0
+2026-07-09 16:51:49,963 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:51:49,963 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2040.2
+2026-07-09 16:51:49,963 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2040.3
+2026-07-09 16:51:49,963 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:51:49,963 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:51:49,971 | INFO | SessionContext: session created
+2026-07-09 16:51:49,971 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:51:50,074 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:51:50,074 | INFO | Application services initialized
+2026-07-09 16:51:50,079 | INFO | KM: upload_document called for tmpef_qdwb7.pdf
+2026-07-09 16:51:50,085 | INFO | KBRepository: record added id=1 filename=tmpef_qdwb7.pdf status=waiting
+2026-07-09 16:51:50,085 | INFO | KM: document metadata saved id=1 filename=tmpef_qdwb7.pdf
+2026-07-09 16:51:50,086 | INFO | KM: background indexing thread started for doc_id=1
+2026-07-09 16:52:46,473 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:52:46,497 | INFO | Task Scheduler started
+2026-07-09 16:52:46,498 | INFO | Schedule loaded: count=0
+2026-07-09 16:52:46,507 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:52:46,509 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:52:48,500 | INFO | Schedule loaded: count=0
+2026-07-09 16:52:48,590 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:52:48,590 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:52:50,502 | INFO | Schedule loaded: count=0
+2026-07-09 16:52:50,626 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:52:50,626 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2035.8
+2026-07-09 16:52:50,626 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2035.8
+2026-07-09 16:52:50,626 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:52:50,626 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:52:50,631 | INFO | SessionContext: session created
+2026-07-09 16:52:50,632 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:52:50,727 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:52:50,727 | INFO | Application services initialized
+2026-07-09 16:52:50,727 | INFO | DocumentManager: registered loader TxtLoader for extension .txt
+2026-07-09 16:52:50,727 | INFO | DocumentManager: registered loader TxtLoader for extension .pdf
+2026-07-09 16:52:50,730 | INFO | KM: upload_document called for tmp7khc85p6.txt
+2026-07-09 16:52:50,735 | INFO | KBRepository: record added id=2 filename=tmp7khc85p6.txt status=waiting
+2026-07-09 16:52:50,736 | INFO | KM: document metadata saved id=2 filename=tmp7khc85p6.txt
+2026-07-09 16:52:50,736 | INFO | KM: background indexing thread started for doc_id=2
+2026-07-09 16:52:50,743 | DEBUG | KBRepository: updated status doc_id=2 status=parsing
+2026-07-09 16:52:50,743 | DEBUG | KM: progress doc_id=2 status=parsing
+2026-07-09 16:52:50,743 | INFO | Index: parsed doc_id=2 pages=1 chars=41
+2026-07-09 16:52:50,749 | DEBUG | KBRepository: updated status doc_id=2 status=chunking
+2026-07-09 16:52:50,749 | DEBUG | KM: progress doc_id=2 status=chunking
+2026-07-09 16:52:50,750 | INFO | Index: chunked doc_id=2 into 1 chunks
+2026-07-09 16:52:50,755 | DEBUG | KBRepository: updated status doc_id=2 status=embedding
+2026-07-09 16:52:50,756 | DEBUG | KM: progress doc_id=2 status=embedding
+2026-07-09 16:52:51,453 | DEBUG | GPU diagnostics query failed (safe fallback to N/A): [WinError 2] The system cannot find the file specified
+2026-07-09 16:56:12,015 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:56:12,059 | INFO | Task Scheduler started
+2026-07-09 16:56:12,060 | INFO | Schedule loaded: count=0
+2026-07-09 16:56:12,076 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:56:12,079 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:56:14,062 | INFO | Schedule loaded: count=0
+2026-07-09 16:56:14,157 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:56:14,157 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:56:16,064 | INFO | Schedule loaded: count=0
+2026-07-09 16:56:16,197 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:56:16,197 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2039.9
+2026-07-09 16:56:16,197 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2040.0
+2026-07-09 16:56:16,197 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:56:16,197 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:56:16,203 | INFO | SessionContext: session created
+2026-07-09 16:56:16,204 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:56:16,311 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:56:16,311 | INFO | Application services initialized
+2026-07-09 16:56:16,311 | INFO | DocumentManager: registered loader TxtLoader for extension .txt
+2026-07-09 16:56:16,311 | INFO | DocumentManager: registered loader TxtLoader for extension .pdf
+2026-07-09 16:56:16,315 | INFO | KM: upload_document called for tmp7_bb23u9.txt
+2026-07-09 16:56:16,321 | INFO | KBRepository: record added id=3 filename=tmp7_bb23u9.txt status=waiting
+2026-07-09 16:56:16,322 | INFO | KM: document metadata saved id=3 filename=tmp7_bb23u9.txt
+2026-07-09 16:56:16,322 | INFO | KM: background indexing thread started for doc_id=3
+2026-07-09 16:56:16,330 | DEBUG | KBRepository: updated status doc_id=3 status=parsing
+2026-07-09 16:56:16,330 | DEBUG | KM: progress doc_id=3 status=parsing
+2026-07-09 16:56:16,330 | INFO | Index: parsed doc_id=3 pages=1 chars=41
+2026-07-09 16:56:16,337 | DEBUG | KBRepository: updated status doc_id=3 status=chunking
+2026-07-09 16:56:16,337 | DEBUG | KM: progress doc_id=3 status=chunking
+2026-07-09 16:56:16,337 | INFO | Index: chunked doc_id=3 into 1 chunks
+2026-07-09 16:56:16,342 | DEBUG | KBRepository: updated status doc_id=3 status=embedding
+2026-07-09 16:56:16,343 | DEBUG | KM: progress doc_id=3 status=embedding
+2026-07-09 16:56:17,060 | DEBUG | GPU diagnostics query failed (safe fallback to N/A): [WinError 2] The system cannot find the file specified
+2026-07-09 16:57:01,655 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 16:57:01,666 | INFO | Task Scheduler started
+2026-07-09 16:57:01,667 | INFO | Schedule loaded: count=0
+2026-07-09 16:57:01,673 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 16:57:01,675 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 16:57:03,669 | INFO | Schedule loaded: count=0
+2026-07-09 16:57:03,750 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:57:03,750 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 16:57:05,670 | INFO | Schedule loaded: count=0
+2026-07-09 16:57:05,780 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 16:57:05,780 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2030.5
+2026-07-09 16:57:05,780 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2030.6
+2026-07-09 16:57:05,781 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 16:57:05,781 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 16:57:05,786 | INFO | SessionContext: session created
+2026-07-09 16:57:05,786 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 16:57:05,829 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 16:57:05,830 | INFO | Application services initialized
+2026-07-09 16:57:05,830 | INFO | DocumentManager: registered loader TxtLoader for extension .txt
+2026-07-09 16:57:05,830 | INFO | DocumentManager: registered loader TxtLoader for extension .pdf
+2026-07-09 16:57:05,841 | INFO | KM: upload_document called for tmptr_6sze2.txt
+2026-07-09 16:57:05,848 | INFO | KBRepository: record added id=4 filename=tmptr_6sze2.txt status=waiting
+2026-07-09 16:57:05,848 | INFO | KM: document metadata saved id=4 filename=tmptr_6sze2.txt
+2026-07-09 16:57:05,849 | INFO | KM: background indexing thread started for doc_id=4

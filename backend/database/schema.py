@@ -53,8 +53,20 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
             content TEXT NOT NULL,
             source_path TEXT NOT NULL,
             created_at TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'indexed',
+            chunk_count INTEGER NOT NULL DEFAULT 0,
             metadata TEXT NOT NULL DEFAULT '{}'
         )
         """
     )
+
+    # Migration: add status column if missing
+    try:
+        connection.execute("ALTER TABLE kb_documents ADD COLUMN status TEXT NOT NULL DEFAULT 'indexed'")
+    except Exception:
+        pass
+    try:
+        connection.execute("ALTER TABLE kb_documents ADD COLUMN chunk_count INTEGER NOT NULL DEFAULT 0")
+    except Exception:
+        pass
     connection.commit()
