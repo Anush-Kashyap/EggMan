@@ -1,4 +1,4 @@
-# 🥚 EggMan v0.6
+# 🥚 EggMan v0.7
 
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Framework: PySide6](https://img.shields.io/badge/framework-PySide6-green.svg?style=for-the-badge&logo=qt&logoColor=white)](https://wiki.qt.io/Qt_for_Python)
@@ -11,21 +11,23 @@
 ---
 
 ## 📖 Table of Contents
-1. [🚀 Core Modules in Version 0.6](#-core-modules-in-version-06)
+1. [🚀 Core Modules in Version 0.7](#-core-modules-in-version-0.7)
 2. [🧠 Memory System v2](#-memory-system-v2)
 3. [🧩 Prompt Builder v2](#-prompt-builder-v2)
-4. [📊 Egg Inspector Diagnostics](#-egg-inspector-diagnostics)
-5. [🎭 Persona System (v1)](#-persona-system-v1)
-6. [⚡ Startup System v2](#-startup-system-v2)
-7. [🛠️ Architectural Workflow](#-architectural-workflow)
-8. [🎙️ Wake-Word & Voice Interface](#-wake-word--voice-interface)
-9. [📁 Repository Structure](#-repository-structure)
-10. [💻 Developer Quick Start](#-developer-quick-start)
-11. [📦 PyInstaller Bundling](#-pyinstaller-bundling)
+4. [⚡ Event Bus Infrastructure](#-event-bus-infrastructure)
+5. [🗃️ Capability & Tool Registry V2](#-capability--tool-registry-v2)
+6. [📊 Egg Inspector Diagnostics](#-egg-inspector-diagnostics)
+7. [🎭 Persona System (v1)](#-persona-system-v1)
+8. [⚡ Startup System v2](#-startup-system-v2)
+9. [🛠️ Architectural Workflow](#-architectural-workflow)
+10. [🎙️ Wake-Word & Voice Interface](#-wake-word--voice-interface)
+11. [📁 Repository Structure](#-repository-structure)
+12. [💻 Developer Quick Start](#-developer-quick-start)
+13. [📦 PyInstaller Bundling](#-pyinstaller-bundling)
 
 ---
 
-## 🚀 Core Modules in Version 0.6
+## 🚀 Core Modules in Version 0.7
 
 ### ⚡ Fluid Token Streaming & Micro-Animations
 - **Zero-Latency Rendering:** Tokens are written directly to the screen as soon as they are received from the local Ollama stream, bypassing all buffer lag.
@@ -59,6 +61,27 @@ To avoid system prompt bloat and improve response speed, EggMan utilizes a regis
 - **Modular LEGO Structure:** Dynamically selects only applicable prompt blocks (e.g., Vision rules are omitted unless an image is attached; Memory rules are omitted if no memories are retrieved).
 - **Static Caching:** Static modules (Core Identity, Communication Style) are cached at compile time.
 - **Qualifying Inferences:** Low-confidence inferences are prefixed with `(Possible)` inside the prompt so the LLM does not state them as absolute facts.
+
+---
+
+## ⚡ Event Bus Infrastructure
+
+EggMan v0.7 introduces a custom, production-ready **Event Bus System** that serves as the decoupled communication backbone of the companion:
+- **Strongly-Typed Event Objects:** Communication uses BaseEvent subclasses (e.g. `StartupTaskStartedEvent`, `StartupTaskCompletedEvent`) instead of raw strings.
+- **Concurrently Thread-Safe:** Employs reentrant locking (`threading.RLock`) to safely register callbacks and dispatch events across parallel background threads.
+- **Exception Isolation:** Guarantees that callback failures in one subscriber do not block the publication flow to other modules.
+- **Proof-of-Concept Integration:** Migrated the **Startup System** to decoupled Event Bus notifications to coordinate thread-safe UI state updates.
+
+---
+
+## 🗃️ Capability & Tool Registry (v0.7)
+
+EggMan v0.7 implements a highly extensible **Registry Subsystem** designed to eliminate hardcoded feature lists and modularize the runtime environment:
+- **BaseRegistry Backbone:** Standardizes operations (`register`, `unregister`, `get`, `exists`, `clear`, iteration, ID lookup) with reentrant locking (`threading.RLock`) for full thread safety.
+- **Capabilities (Descriptive):** Profiles representing what EggMan is capable of (`Voice`, `Vision`, `Desktop Automation`, `Knowledge`, `Developer`).
+- **Tools (Executable V2):** Connects to parents and wraps executable objects (`Calculator`, `Clipboard`, `Screenshot`, `Launch Application`, `Knowledge Search`) with strict metadata schemas.
+- **Dynamic Help Dialog:** Rewrites the `/help` window layout to dynamically read and build UI cards representing active capabilities and their health status on the fly.
+- **Event Bus Integration:** Dispatches state change events (`CapabilityRegisteredEvent`, `ToolRegisteredEvent`, `CapabilityEnabledEvent`, etc.) directly via the Event Bus for out-of-band updates.
 
 ---
 

@@ -37,6 +37,11 @@ from backend.tools.registry import ToolRegistry
 from backend.tools.router import ToolRouter
 from backend.tools.tool_manager import ToolManager
 from backend.tools.builtins import ApplicationRegistry, CalculatorTool, ClipboardTool, AppLauncherTool
+from backend.event_bus.event_bus import EventBus
+from backend.registry.capability.capability_registry import CapabilityRegistry
+from backend.registry.tool.tool_registry import ToolRegistry as ToolRegistryV2
+from backend.registry.capability.decorators import register_pending_capabilities
+from backend.registry.tool.decorators import register_pending_tools
 from core.commands import CommandHandler
 from core.config import ConfigManager
 from core.conversation import ConversationEngine
@@ -69,6 +74,7 @@ class AppContainer:
             USER_DATA_ROOT,
         )
         self.settings_manager = SettingsManager()
+        self.event_bus = EventBus()
         self.command_handler = CommandHandler()
         self.database_manager = DatabaseManager(database_path=database_path)
         self.conversation_repository = ConversationRepository(self.database_manager)
@@ -149,6 +155,13 @@ class AppContainer:
             retrieval_service=self.retrieval_service,
             knowledge_manager=self.knowledge_manager,
         )
+        self.capability_registry = CapabilityRegistry(event_bus=self.event_bus)
+        self.tool_registry_v2 = ToolRegistryV2(event_bus=self.event_bus)
+
+        # Flush auto-registrations
+        register_pending_capabilities(self.capability_registry)
+        register_pending_tools(self.tool_registry_v2, container=self)
+
         self.prompt_pipeline = PromptPipeline()
         self.streaming_pipeline = StreamingPipeline()
         self.tool_registry = ToolRegistry()

@@ -10,6 +10,15 @@ from backend.profiler.request_profile import RequestProfile
 logger = logging.getLogger("eggman")
 
 
+from backend.registry.capability.decorators import capability
+
+@capability(
+    id="developer",
+    name="Developer",
+    description="Developer Telemetry, Logs, and System Profiling.",
+    category="diagnostics",
+    version="1.0.0"
+)
 class PerformanceProfiler:
     """Manages execution profiling, request history, and GPU diagnostics."""
 

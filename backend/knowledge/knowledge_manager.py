@@ -15,6 +15,15 @@ from backend.knowledge.vector_store import VectorStore
 logger = logging.getLogger("eggman")
 
 
+from backend.registry.capability.decorators import capability
+
+@capability(
+    id="knowledge",
+    name="Knowledge",
+    description="Indexes and searches uploaded PDF documentation.",
+    category="general",
+    version="1.0.0"
+)
 class KnowledgeManager:
     """Public interface for the Knowledge System.
 

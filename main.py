@@ -117,9 +117,20 @@ class ChatWindow(QWidget):
             self._schedule_triggered.connect(self._on_schedule_triggered)
 
         # ----- Startup System v2 -----
-        self._startup_service = StartupService(self._services)
+        self._startup_service = StartupService(self._services, event_bus=self._services.event_bus)
         self._startup_ready.connect(self._on_startup_ready)
         self._startup_error.connect(self._on_startup_error)
+
+        # Subscribe MainWindow to Startup events on EventBus
+        from backend.event_bus.event_types import (
+            StartupTaskStartedEvent,
+            StartupTaskCompletedEvent,
+            StartupCompletedEvent,
+        )
+        if hasattr(self._services, "event_bus") and self._services.event_bus is not None:
+            self._services.event_bus.subscribe(StartupTaskStartedEvent, self._on_startup_task_started_event)
+            self._services.event_bus.subscribe(StartupTaskCompletedEvent, self._on_startup_task_completed_event)
+            self._services.event_bus.subscribe(StartupCompletedEvent, self._on_startup_completed_event)
 
         # Show the welcome/initializing message immediately
         self._post_startup_init_message()
@@ -357,6 +368,26 @@ class ChatWindow(QWidget):
             "egg",
             f"⚠️ Startup encountered an error.\n\n{error}\n\nSome features may be unavailable.",
             self._now(),
+        )
+
+    def _on_startup_task_started_event(self, event) -> None:
+        self._logger.info("[EVENT BUS] Startup task started: %s", event.task_name)
+
+    def _on_startup_task_completed_event(self, event) -> None:
+        self._logger.info(
+            "[EVENT BUS] Startup task completed: %s | success=%s | duration=%.3fs | error=%s",
+            event.task_name,
+            event.success,
+            event.duration,
+            event.error_message
+        )
+
+    def _on_startup_completed_event(self, event) -> None:
+        self._logger.info(
+            "[EVENT BUS] Entire startup sequence completed | success=%s | total_time=%.3fs | error=%s",
+            event.success,
+            event.total_time,
+            event.error_message
         )
 
     def _on_persona_selected(self, key: str) -> None:
@@ -665,6 +696,7 @@ class ChatWindow(QWidget):
                 settings=self._settings,
                 config=self._config,
                 theme_mgr=self._theme_mgr,
+                capability_registry=self._services.capability_registry,
                 parent=self,
             )
             self._help_window.clear_requested.connect(self._on_help_clear)

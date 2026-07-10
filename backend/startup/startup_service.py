@@ -6,6 +6,12 @@ import time
 import logging
 from typing import Dict, Optional, Callable, Any
 
+from backend.event_bus.event_types import (
+    StartupTaskStartedEvent,
+    StartupTaskCompletedEvent,
+    StartupCompletedEvent,
+)
+
 logger = logging.getLogger("eggman")
 
 
@@ -54,13 +60,21 @@ class StartupService:
     # Internal slash commands always allowed, even during init
     ALWAYS_ALLOWED_COMMANDS = {"/help", "/schedule", "/file", "/dev", "/clear", "/export", "/settings", "/theme"}
 
-    def __init__(self, container: Any) -> None:
+    def __init__(self, container: Any, event_bus: Any = None) -> None:
         self._container = container
+        self._event_bus = event_bus or (container.event_bus if hasattr(container, "event_bus") else None)
         self._state = StartupState.INITIALIZING
         self._lock = threading.Lock()
         self.profile = StartupProfile()
         self._on_ready: Optional[Callable[[], None]] = None
         self._on_error: Optional[Callable[[str], None]] = None
+
+    def _publish(self, event: Any) -> None:
+        if self._event_bus:
+            try:
+                self._event_bus.publish(event)
+            except Exception as exc:
+                logger.error("[STARTUP] Failed to publish event %s: %s", type(event).__name__, exc)
 
     # ------------------------------------------------------------------ state
 
@@ -104,6 +118,7 @@ class StartupService:
     def _run(self) -> None:
         logger.info("[STARTUP] Startup sequence started")
         error_message: Optional[str] = None
+        self._publish(StartupTaskStartedEvent(task_name="Startup Sequence"))
 
         try:
             # Phase 1: All independent startup tasks run concurrently
@@ -147,6 +162,9 @@ class StartupService:
                 {k: f"{v:.3f}s" for k, v in self.profile.stages.items()},
             )
 
+            # Publish StartupCompletedEvent
+            self._publish(StartupCompletedEvent(success=True, total_time=self.profile.total_time))
+
             if self._on_ready:
                 self._on_ready()
 
@@ -156,12 +174,25 @@ class StartupService:
             self.profile.finalize(StartupState.ERROR)
             with self._lock:
                 self._state = StartupState.ERROR
+
+            self._publish(
+                StartupCompletedEvent(
+                    success=False,
+                    total_time=self.profile.total_time,
+                    error_message=error_message,
+                )
+            )
+
             if self._on_error:
                 self._on_error(error_message)
 
     # ---------------------------------------------------------------- stages
 
     def _init_session(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="SessionContext"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             from backend.session.session_manager import SessionManager
             ctx = SessionManager.get_instance().context
@@ -169,42 +200,98 @@ class StartupService:
             ctx.developer_mode = dev_mode
             logger.info("[STARTUP] SessionContext initialized developer_mode=%s", dev_mode)
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] SessionContext init failed: %s", exc)
         finally:
             self.profile.stop_stage("SessionContext")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="SessionContext",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _init_scheduler(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Scheduler"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             if hasattr(self._container, "scheduler"):
                 # Scheduler starts its own thread on construction; nothing extra needed here
                 logger.info("[STARTUP] Scheduler initialized")
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Scheduler init failed: %s", exc)
         finally:
             self.profile.stop_stage("Scheduler")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Scheduler",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _init_voice(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Voice Initialization"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             # Voice subsystem is initialized lazily; pre-validate it exists
             if hasattr(self._container, "voice_manager"):
                 logger.info("[STARTUP] Voice subsystem ready")
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Voice init failed: %s", exc)
         finally:
             self.profile.stop_stage("Voice Initialization")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Voice Initialization",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _verify_config(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Configuration"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             cfg = self._container.config_manager
             _ = cfg.get("ollama_model")
             _ = cfg.get("ollama_base_url")
             logger.info("[STARTUP] Configuration verified")
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Configuration verification failed: %s", exc)
         finally:
             self.profile.stop_stage("Configuration")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Configuration",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _connect_ollama(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Ollama Connection"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             from backend.ai.ollama_provider import OllamaProvider
             provider = OllamaProvider(
@@ -220,19 +307,36 @@ class StartupService:
                     result.get("elapsed_ms", 0),
                 )
             else:
+                success = False
                 err = result.get("error", "Unknown error")
                 logger.warning("[STARTUP] Ollama connection failed: %s", err)
                 self._container.ollama_startup_error = str(err)
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Ollama connection error: %s", exc)
             self._container.ollama_startup_error = str(exc)
         finally:
             self.profile.stop_stage("Ollama Connection")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Ollama Connection",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _warmup_model(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Model Warm-Up"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             if self._container.ollama_startup_error:
                 logger.warning("[STARTUP] Skipping model warm-up — Ollama not available")
+                success = False
+                err = "Ollama not available"
                 return
 
             logger.info("[STARTUP] Model warm-up started")
@@ -248,26 +352,50 @@ class StartupService:
                 conversation_history=[],
                 images=[],
             )
-            t_start = time.perf_counter()
             response = provider.generate(warmup_request)
-            elapsed = time.perf_counter() - t_start
 
             if response.successful:
-                logger.info("[STARTUP] Model warm-up completed in %.2fs", elapsed)
+                logger.info("[STARTUP] Model warm-up completed")
             else:
+                success = False
+                err = response.error
                 logger.warning("[STARTUP] Model warm-up completed with error: %s (continuing)", response.error)
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Model warm-up failed: %s — continuing anyway", exc)
         finally:
             self.profile.stop_stage("Model Warm-Up")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Model Warm-Up",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )
 
     def _check_reminders(self) -> None:
+        self._publish(StartupTaskStartedEvent(task_name="Reminder Check"))
+        t_start = time.perf_counter()
+        success = True
+        err = None
         try:
             if hasattr(self._container, "task_repository"):
                 tasks = self._container.task_repository.get_all_tasks()
                 overdue_count = len(tasks) if tasks else 0
                 logger.info("[STARTUP] Reminder check done active_tasks=%d", overdue_count)
         except Exception as exc:
+            success = False
+            err = str(exc)
             logger.error("[STARTUP] Reminder check failed: %s", exc)
         finally:
             self.profile.stop_stage("Reminder Check")
+            self._publish(
+                StartupTaskCompletedEvent(
+                    task_name="Reminder Check",
+                    duration=time.perf_counter() - t_start,
+                    success=success,
+                    error_message=err,
+                )
+            )

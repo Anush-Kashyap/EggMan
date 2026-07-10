@@ -8,6 +8,15 @@ from backend.tools.registry import ToolRegistry
 from backend.tools.tool import BaseTool
 
 
+from backend.registry.capability.decorators import capability
+
+@capability(
+    id="desktop_automation",
+    name="Desktop Automation",
+    description="Enables Clipboard, Calculator, and Application Launching.",
+    category="automation",
+    version="1.0.0"
+)
 class ToolManager:
     """Coordinates tool registration and execution for future AI tool use."""
 

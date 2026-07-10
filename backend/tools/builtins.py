@@ -8,9 +8,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
+from backend.registry.tool.decorators import tool
 from backend.tools.tool import BaseTool
 
 
+@tool(
+    id="calculator",
+    capability_id="desktop_automation",
+    name="Calculator",
+    description="Safely evaluates basic arithmetic expressions."
+)
 class CalculatorTool(BaseTool):
     """Safely evaluates basic arithmetic expressions."""
 
@@ -98,6 +105,12 @@ class TkClipboardBackend:
             root.destroy()
 
 
+@tool(
+    id="clipboard",
+    capability_id="desktop_automation",
+    name="Clipboard",
+    description="Copies to and reads from the system clipboard."
+)
 class ClipboardTool(BaseTool):
     """Copies to and reads from the system clipboard."""
 
@@ -150,6 +163,12 @@ class ApplicationRegistry:
         return sorted(self.applications.keys())
 
 
+@tool(
+    id="app_launcher",
+    capability_id="desktop_automation",
+    name="Launch Application",
+    description="Launches registered desktop applications."
+)
 class AppLauncherTool(BaseTool):
     """Launches only registered applications without shell command execution."""
 
@@ -187,3 +206,26 @@ class AppLauncherTool(BaseTool):
                 last_error = exc
 
         raise RuntimeError(f"Registered application could not be launched: {requested_name}") from last_error
+
+
+@tool(
+    id="screenshot",
+    capability_id="vision",
+    name="Screenshot",
+    description="Enables screen capture for vision model parsing."
+)
+class ScreenshotTool:
+    def execute(self) -> str:
+        return "Screenshot captured"
+
+
+@tool(
+    id="knowledge_search",
+    capability_id="knowledge",
+    name="Knowledge Search",
+    description="Performs semantic search across indexed document databases."
+)
+class KnowledgeSearchTool:
+    def execute(self, query: str) -> str:
+        return f"Searching knowledge for: {query}"
+

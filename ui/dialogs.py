@@ -165,11 +165,19 @@ class HelpWindow(QDialog):
     export_requested = Signal()
     settings_requested = Signal()
 
-    def __init__(self, settings: SettingsManager, config: ConfigManager, theme_mgr: ThemeManager, parent=None) -> None:
+    def __init__(
+        self,
+        settings: SettingsManager,
+        config: ConfigManager,
+        theme_mgr: ThemeManager,
+        capability_registry: Any = None,
+        parent=None
+    ) -> None:
         super().__init__(parent)
         self._settings = settings
         self._config = config
         self._theme_mgr = theme_mgr
+        self._capability_registry = capability_registry
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -270,7 +278,57 @@ class HelpWindow(QDialog):
         self.meta_layout.addRow("Current Theme:", self.theme_lbl)
 
         content_layout.addLayout(self.meta_layout)
-        content_layout.addStretch()
+
+        # Capabilities scroll panel
+        caps_title = QLabel("Available Capabilities")
+        caps_title.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        content_layout.addWidget(caps_title)
+
+        caps_scroll = QScrollArea()
+        caps_scroll.setWidgetResizable(True)
+        caps_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        caps_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        caps_scroll.setObjectName("capsScroll")
+        caps_scroll.setFrameShape(QFrame.NoFrame)
+
+        caps_container = QWidget()
+        caps_list_layout = QVBoxLayout(caps_container)
+        caps_list_layout.setContentsMargins(0, 0, 0, 0)
+        caps_list_layout.setSpacing(6)
+
+        if self._capability_registry is not None:
+            for cap in self._capability_registry.get_all():
+                cap_widget = QWidget()
+                cap_widget.setObjectName("capWidget")
+                cap_layout = QVBoxLayout(cap_widget)
+                cap_layout.setContentsMargins(8, 6, 8, 6)
+                cap_layout.setSpacing(2)
+
+                name_row = QHBoxLayout()
+                name_lbl = QLabel(f"● {cap.name}")
+                name_lbl.setFont(QFont("Segoe UI", 9, QFont.Bold))
+
+                status_color = "#2ECC71" if cap.health_status == "Healthy" else "#E74C3C"
+                status_lbl = QLabel(cap.health_status)
+                status_lbl.setFont(QFont("Segoe UI", 8, QFont.Bold))
+                status_lbl.setStyleSheet(f"color: {status_color};")
+
+                name_row.addWidget(name_lbl)
+                name_row.addStretch()
+                name_row.addWidget(status_lbl)
+                cap_layout.addLayout(name_row)
+
+                desc_lbl = QLabel(cap.description)
+                desc_lbl.setWordWrap(True)
+                desc_lbl.setFont(QFont("Segoe UI", 8))
+                desc_lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
+                cap_layout.addWidget(desc_lbl)
+
+                caps_list_layout.addWidget(cap_widget)
+
+        caps_list_layout.addStretch()
+        caps_scroll.setWidget(caps_container)
+        content_layout.addWidget(caps_scroll, stretch=1)
 
         layout.addWidget(content_widget, stretch=1)
 
@@ -325,6 +383,15 @@ class HelpWindow(QDialog):
                 background: {Theme.CREAM};
                 border: 1.5px solid {Theme.BORDER};
                 border-radius: {Theme.RADIUS}px;
+            }}
+            QScrollArea#capsScroll {{
+                background: transparent;
+                border: none;
+            }}
+            QWidget#capWidget {{
+                background: {Theme.BTN_BG};
+                border: 1px solid {Theme.BORDER};
+                border-radius: 6px;
             }}
         """)
 

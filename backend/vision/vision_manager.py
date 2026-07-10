@@ -125,6 +125,15 @@ class FloatingPreviewWidget(QWidget):
             self.move(x, y)
 
 
+from backend.registry.capability.decorators import capability
+
+@capability(
+    id="vision",
+    name="Vision",
+    description="Enables desktop screenshots and visual analysis.",
+    category="general",
+    version="1.0.0"
+)
 class VisionManager(QObject):
     """Entry point for all image/visual content capture and understanding."""
 

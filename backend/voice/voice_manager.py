@@ -25,6 +25,15 @@ TranscriptionCallback = Callable[[str], None]
 ErrorCallback = Callable[[str], None]
 
 
+from backend.registry.capability.decorators import capability
+
+@capability(
+    id="voice",
+    name="Voice",
+    description="Handles speech recognition and voice commands.",
+    category="general",
+    version="1.0.0"
+)
 class VoiceManager:
     """Coordinates microphone capture and speech-to-text on a background thread.
 

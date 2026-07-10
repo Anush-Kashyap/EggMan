@@ -332,6 +332,27 @@ sequenceDiagram
 
 ---
 
+## ⚡ Event Bus Subsystem (v0.7)
+A decoupled, thread-safe communication backbone constructed to allow modules to interact without compile-time dependencies.
+*   **Decoupled Registration**: Modules subscribe to event classes (`BaseEvent` subclasses) dynamically.
+*   **Concurrent Thread Protection**: Uses reentrant locking (`threading.RLock`) to guard subscribers. Executions run outside the lock to prevent thread deadlocks.
+*   **Exception Isolation**: Prevents subscriber callbacks raising exceptions from breaking the loop context of other subscribers.
+*   **Startup Proof-of-Concept**: Employs `StartupTaskStartedEvent`, `StartupTaskCompletedEvent`, and `StartupCompletedEvent` to report concurrent stage completions.
+
+---
+
+## 🗃️ Registry Subsystem (v0.7)
+A production-quality Registry Framework designed to decouple EggMan's core capabilities and tool execution contexts.
+*   **BaseRegistry Infrastructure**: Thread-safe base implementation (`BaseRegistry`) supporting registration, unregistration, validation, duplicate prevention, thread-safe iteration, and ID lookup.
+*   **Capabilities vs. Tools**:
+    *   **Capabilities**: Descriptive metadata profiles representing *what* EggMan can do (e.g. `Voice`, `Vision`, `Desktop Automation`, `Knowledge`, `Developer`).
+    *   **Tools**: Executable modules describing *how* EggMan performs actions (e.g., `Calculator`, `Clipboard`, `Screenshot`, `Launch Application`, `Knowledge Search`), mapping to parents.
+*   **Automatic Registration**: Annotations (`@capability(...)` and `@tool(...)`) register configurations dynamically during initialization, eliminating manual bootstrapping.
+*   **Decoupled Event Bus Hooks**: Dispatches strongly-typed events (`CapabilityRegisteredEvent`, `ToolRegisteredEvent`, `CapabilityEnabledEvent`, etc.) directly through the dependency-injected Event Bus.
+*   **Dynamic Help Command**: Replaced hardcoded help menus in `HelpWindow` to dynamically construct capability grids from the active `CapabilityRegistry`.
+
+---
+
 ## 📦 PyInstaller Compiling Pipeline
 
 EggMan compiles into a standalone, zero-dependency executable directory using PyInstaller.
