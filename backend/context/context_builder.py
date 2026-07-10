@@ -130,14 +130,26 @@ class ContextBuilder:
             "",
             "Known User Information:",
         ]
+        
+        # Group memories by category
+        grouped: dict[str, list[Any]] = {}
         for memory in memories[:10]:
             category_value = getattr(memory, "category", "memory")
             category = category_value.value if hasattr(category_value, "value") else str(category_value)
-            key = getattr(memory, "key", "note")
-            value = getattr(memory, "value", None)
-            if value is None:
-                value = getattr(memory, "content", "")
-            lines.append(f"- [{category}] {key}: {value}")
+            grouped.setdefault(category, []).append(memory)
+
+        for category, mem_list in grouped.items():
+            lines.append(f"  {category.replace('_', ' ').title()}:")
+            for memory in mem_list:
+                value = getattr(memory, "value", None)
+                if value is None:
+                    value = getattr(memory, "content", "")
+                
+                confidence = getattr(memory, "confidence", 1.0)
+                if confidence < 0.7:
+                    lines.append(f"    - (Possible) {value}")
+                else:
+                    lines.append(f"    - {value}")
 
         self._logger.info("Memory injected into prompt count=%d", min(len(memories), 10))
         return "\n".join(lines)

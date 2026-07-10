@@ -692,14 +692,14 @@ class KnowledgeBaseWindow(QDialog):
             cy = pg.y() + (pg.height() - 480) // 2
             self.move(cx, cy)
             
-        self._build_ui()
-        self.load_documents()
-
-        # Polling timer to refresh document status during background indexing
+        # Polling timer must be created before load_documents()
         self._refresh_timer = QTimer(self)
         self._refresh_timer.setInterval(1500)
         self._refresh_timer.timeout.connect(self._poll_refresh)
         self._refresh_timer.start()
+
+        self._build_ui()
+        self.load_documents()
 
     def _build_ui(self) -> None:
         base_layout = QVBoxLayout(self)
@@ -1086,6 +1086,8 @@ class EggInspectorWindow(QDialog):
         self._init_performance_tab()
         self._init_startup_tab()
         self._init_knowledge_tab()
+        self._init_memory_tab()
+        self._init_prompt_tab()
         self._init_placeholder_tabs()
 
         # 2. Status Bar live panel at bottom
@@ -1190,8 +1192,6 @@ class EggInspectorWindow(QDialog):
 
     def _init_placeholder_tabs(self) -> None:
         placeholder_tabs = [
-            ("🧠 Context", "Context Dashboard Coming Soon\n\nReserved for Future Development"),
-            ("💾 Memory", "Memory Graph Visualizer Coming Soon\n\nReserved for Future Development"),
             ("🛠 Tools", "Tool Execution Inspector Coming Soon\n\nReserved for Future Development"),
             ("🎤 Voice", "Voice Synthesis Diagnostic Panel Coming Soon\n\nReserved for Future Development"),
             ("👁 Vision", "Vision Token Calculator Coming Soon\n\nReserved for Future Development"),
@@ -1337,6 +1337,12 @@ class EggInspectorWindow(QDialog):
 
         # Refresh Knowledge tab
         self._refresh_knowledge_panel()
+
+        # Refresh Memory tab
+        self._refresh_memory_panel()
+
+        # Refresh Prompt tab
+        self._refresh_prompt_panel()
 
     def _refresh_startup_panel(self) -> None:
         """Rebuild the startup timing panel content from the StartupService profile."""
@@ -1702,7 +1708,7 @@ class EggInspectorWindow(QDialog):
 
     def _refresh_knowledge_panel(self) -> None:
         """Update the Knowledge tab with current stats from the vector store and knowledge manager."""
-        if not hasattr(self, "_kb_grid"):
+        if not hasattr(self, "_kb_scroll"):
             return
 
         services = self._services
@@ -1753,8 +1759,7 @@ class EggInspectorWindow(QDialog):
                 scores = ", ".join(f"{r.score:.3f}" for r in retrieval_stats.results[:10])
                 rows.append(("Similarity Scores", scores))
 
-        # Rebuild grid
-        old_w = self._kb_grid.parent()
+        # Rebuild layout cleanly
         new_content = QWidget()
         new_content.setStyleSheet("background: transparent;")
         new_grid = QGridLayout(new_content)
@@ -1773,21 +1778,10 @@ class EggInspectorWindow(QDialog):
             new_grid.addWidget(name_lbl, row_idx, 0)
             new_grid.addWidget(val_lbl, row_idx, 1)
 
-        # Replace the scroll content
-        for i in range(len(rows), self._kb_grid.count()):
-            item = self._kb_grid.itemAt(i)
-            if item and item.widget():
-                item.widget().deleteLater()
-
-        # Swap the grid
-        scroll_content = self._kb_grid.parent()
-        if scroll_content:
-            scroll_content_layout = scroll_content.layout()
-            if scroll_content_layout:
-                scroll_content_layout.removeItem(self._kb_grid)
-        self._kb_grid = new_grid
-        if scroll_content:
-            scroll_content_layout.addLayout(self._kb_grid)
+        old_widget = self._kb_scroll.takeWidget()
+        if old_widget:
+            old_widget.deleteLater()
+        self._kb_scroll.setWidget(new_content)
 
     def _on_compare_clicked(self) -> None:
         """Show comparison dialog comparing this request's stats to history averages."""
@@ -1893,3 +1887,250 @@ class EggInspectorWindow(QDialog):
         layout.addWidget(btn, alignment=Qt.AlignRight)
 
         comp_dialog.exec()
+
+    def _init_memory_tab(self) -> None:
+        """Build the Memory diagnostics panel."""
+        mem_widget = QWidget()
+        layout = QVBoxLayout(mem_widget)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        title_lbl = QLabel("Memory System Diagnostics")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        layout.addWidget(title_lbl)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(
+            f"border: 1px solid {Theme.BORDER}; border-radius: 6px; background: {Theme.CREAM_DARK};"
+        )
+
+        content = QWidget()
+        content.setStyleSheet("background: transparent;")
+        grid = QGridLayout(content)
+        grid.setContentsMargins(16, 16, 16, 16)
+        grid.setVerticalSpacing(10)
+        grid.setHorizontalSpacing(24)
+
+        scroll.setWidget(content)
+        self._memory_scroll = scroll
+        layout.addWidget(scroll, stretch=1)
+
+        self.tabs.addTab(mem_widget, "💾 Memory")
+
+    def _refresh_memory_panel(self) -> None:
+        """Update the Memory tab with current stats from the memory manager."""
+        if not hasattr(self, "_memory_scroll"):
+            return
+
+        services = self._services
+        if not hasattr(services, "memory_manager"):
+            return
+
+        mm = services.memory_manager
+        stats = mm.get_memory_stats()
+
+        rows: list[tuple[str, str]] = [
+            ("Total Memories", str(stats.get("total_memories", 0))),
+            ("Active Memories", str(stats.get("active_memories", 0))),
+            ("Expired Memories", str(stats.get("expired_memories", 0))),
+            ("Superseded Memories", str(stats.get("superseded_memories", 0))),
+            ("Average Confidence", f"{stats.get('average_confidence', 0.0) * 100:.1f}%"),
+            ("Database Size", f"{stats.get('db_size_bytes', 0) / 1024:.1f} KB"),
+        ]
+
+        # Category Breakdown
+        categories = stats.get("category_distribution", {})
+        if categories:
+            rows.append(("", ""))
+            rows.append(("Category Distribution", ""))
+            for cat, count in categories.items():
+                rows.append((f"  - {cat.replace('_', ' ').title()}", str(count)))
+
+        # Importance Breakdown
+        importances = stats.get("importance_distribution", {})
+        if importances:
+            rows.append(("", ""))
+            rows.append(("Importance Distribution", ""))
+            for group, count in importances.items():
+                rows.append((f"  - {group}", str(count)))
+
+        # Rebuild layout cleanly
+        new_content = QWidget()
+        new_content.setStyleSheet("background: transparent;")
+        new_grid = QGridLayout(new_content)
+        new_grid.setContentsMargins(16, 16, 16, 16)
+        new_grid.setVerticalSpacing(10)
+        new_grid.setHorizontalSpacing(24)
+
+        for row_idx, (label, value) in enumerate(rows):
+            name_lbl = QLabel(label)
+            if not value and label:
+                name_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+                name_lbl.setStyleSheet(f"color: {Theme.TEXT_MID}; text-transform: uppercase;")
+            else:
+                name_lbl.setFont(QFont("Segoe UI", 10))
+                name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            
+            val_lbl = QLabel(value)
+            val_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            val_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+            val_lbl.setAlignment(Qt.AlignRight)
+            new_grid.addWidget(name_lbl, row_idx, 0)
+            new_grid.addWidget(val_lbl, row_idx, 1)
+
+        old_widget = self._memory_scroll.takeWidget()
+        if old_widget:
+            old_widget.deleteLater()
+        self._memory_scroll.setWidget(new_content)
+
+    def _init_prompt_tab(self) -> None:
+        """Build the Prompt Analysis diagnostics panel."""
+        prompt_widget = QWidget()
+        layout = QVBoxLayout(prompt_widget)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(12)
+
+        title_lbl = QLabel("Prompt Analysis & Optimization")
+        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Bold))
+        title_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+        layout.addWidget(title_lbl)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setStyleSheet(
+            f"border: 1px solid {Theme.BORDER}; border-radius: 6px; background: {Theme.CREAM_DARK};"
+        )
+
+        content = QWidget()
+        content.setStyleSheet("background: transparent;")
+        grid = QGridLayout(content)
+        grid.setContentsMargins(16, 16, 16, 16)
+        grid.setVerticalSpacing(10)
+        grid.setHorizontalSpacing(24)
+
+        scroll.setWidget(content)
+        self._prompt_scroll = scroll
+        layout.addWidget(scroll, stretch=1)
+
+        self.tabs.addTab(prompt_widget, "🧠 Prompt")
+
+    def _refresh_prompt_panel(self) -> None:
+        """Update the Prompt Analysis tab with current stats from the PromptBuilder class."""
+        if not hasattr(self, "_prompt_scroll"):
+            return
+
+        from backend.prompt.prompt_builder import PromptBuilder
+        stats = PromptBuilder.get_last_stats()
+
+        new_content = QWidget()
+        new_content.setStyleSheet("background: transparent;")
+        new_layout = QVBoxLayout(new_content)
+        new_layout.setContentsMargins(16, 16, 16, 16)
+        new_layout.setSpacing(14)
+
+        if stats is None:
+            no_stats_lbl = QLabel("No prompt has been built in this session yet.\n\nSend a chat message to view real-time prompt optimization diagnostics.")
+            no_stats_lbl.setFont(QFont("Segoe UI", 11))
+            no_stats_lbl.setStyleSheet(f"color: {Theme.TEXT_MID};")
+            no_stats_lbl.setAlignment(Qt.AlignCenter)
+            no_stats_lbl.setWordWrap(True)
+            new_layout.addWidget(no_stats_lbl)
+        else:
+            grid = QGridLayout()
+            grid.setVerticalSpacing(8)
+            grid.setHorizontalSpacing(20)
+
+            rows: list[tuple[str, str, bool]] = [
+                ("Total Prompt Tokens", str(stats.total_tokens), True),
+                ("Prompt Characters", str(stats.total_chars), False),
+                ("Prompt Build Duration", f"{stats.build_duration_ms:.2f} ms", True),
+                ("Prompt Reduction Percentage", f"{stats.reduction_percentage:.1f}%", True),
+                ("Prompt Cache Hits", str(stats.cache_hits), False),
+                ("Prompt Cache Misses", str(stats.cache_misses), False),
+            ]
+
+            for row_idx, (label, val, bold) in enumerate(rows):
+                name_lbl = QLabel(label)
+                name_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold if bold else QFont.Normal))
+                name_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK};")
+                
+                val_lbl = QLabel(val)
+                val_lbl.setFont(QFont("Segoe UI", 10, QFont.Bold if bold else QFont.Normal))
+                val_lbl.setStyleSheet(f"color: {'#4CAF50' if label == 'Prompt Reduction Percentage' else Theme.TEXT_DARK};")
+                val_lbl.setAlignment(Qt.AlignRight)
+                
+                grid.addWidget(name_lbl, row_idx, 0)
+                grid.addWidget(val_lbl, row_idx, 1)
+
+            new_layout.addLayout(grid)
+
+            # Divider
+            div = QFrame()
+            div.setFrameShape(QFrame.HLine)
+            div.setStyleSheet(f"background-color: {Theme.BORDER}; margin-top: 6px; margin-bottom: 6px;")
+            new_layout.addWidget(div)
+
+            # Modules list section title
+            mod_title = QLabel("Prompt Modules Breakdown")
+            mod_title.setFont(QFont("Segoe UI", 10, QFont.Bold))
+            mod_title.setStyleSheet(f"color: {Theme.TEXT_MID}; text-transform: uppercase;")
+            new_layout.addWidget(mod_title)
+
+            # Module breakdown table/grid
+            mod_grid = QGridLayout()
+            mod_grid.setVerticalSpacing(6)
+            mod_grid.setHorizontalSpacing(16)
+            
+            # Table Headers
+            headers = ["Module Name", "Tokens", "Characters", "Gen Time"]
+            for col_idx, text in enumerate(headers):
+                hdr = QLabel(text)
+                hdr.setFont(QFont("Segoe UI", 9, QFont.Bold))
+                hdr.setStyleSheet(f"color: {Theme.TEXT_MID};")
+                if col_idx > 0:
+                    hdr.setAlignment(Qt.AlignRight)
+                mod_grid.addWidget(hdr, 0, col_idx)
+
+            # Table Rows
+            # Display all registered prompt module names
+            all_module_names = ["identity", "persona", "communication", "memory", "knowledge", "vision", "tools", "scheduler", "developer"]
+            
+            for row_idx, m_name in enumerate(all_module_names, start=1):
+                is_used = m_name in stats.modules_used
+                display_name = f"✓ {m_name.title()}" if is_used else f"✗ {m_name.title()}"
+                
+                name_lbl = QLabel(display_name)
+                name_lbl.setFont(QFont("Segoe UI", 9))
+                name_lbl.setStyleSheet(f"color: {'#4CAF50' if is_used else Theme.TEXT_MID};")
+                
+                tok_val = str(stats.module_tokens.get(m_name, 0)) if is_used else "0"
+                tok_lbl = QLabel(tok_val)
+                tok_lbl.setFont(QFont("Segoe UI", 9))
+                tok_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK if is_used else Theme.TEXT_MID};")
+                tok_lbl.setAlignment(Qt.AlignRight)
+
+                char_val = str(stats.module_chars.get(m_name, 0)) if is_used else "0"
+                char_lbl = QLabel(char_val)
+                char_lbl.setFont(QFont("Segoe UI", 9))
+                char_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK if is_used else Theme.TEXT_MID};")
+                char_lbl.setAlignment(Qt.AlignRight)
+
+                time_val = f"{stats.module_generation_times.get(m_name, 0.0):.2f} ms" if is_used else "0.00 ms"
+                time_lbl = QLabel(time_val)
+                time_lbl.setFont(QFont("Segoe UI", 9))
+                time_lbl.setStyleSheet(f"color: {Theme.TEXT_DARK if is_used else Theme.TEXT_MID};")
+                time_lbl.setAlignment(Qt.AlignRight)
+
+                mod_grid.addWidget(name_lbl, row_idx, 0)
+                mod_grid.addWidget(tok_lbl, row_idx, 1)
+                mod_grid.addWidget(char_lbl, row_idx, 2)
+                mod_grid.addWidget(time_lbl, row_idx, 3)
+
+            new_layout.addLayout(mod_grid)
+
+        old_widget = self._prompt_scroll.takeWidget()
+        if old_widget:
+            old_widget.deleteLater()
+        self._prompt_scroll.setWidget(new_content)

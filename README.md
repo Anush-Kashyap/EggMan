@@ -1,4 +1,4 @@
-# 🥚 EggMan v0.5
+# 🥚 EggMan v0.6
 
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Framework: PySide6](https://img.shields.io/badge/framework-PySide6-green.svg?style=for-the-badge&logo=qt&logoColor=white)](https://wiki.qt.io/Qt_for_Python)
@@ -6,25 +6,26 @@
 [![Tests: Pytest](https://img.shields.io/badge/tests-Pytest-yellow.svg?style=for-the-badge&logo=pytest&logoColor=white)](https://docs.pytest.org/)
 
 > **The Ultimate Local, Emotional AI Desktop Companion**  
-> EggMan is a premium, fully offline AI assistant that lives directly on your desktop. Combining real-time streaming, local vector storage, persistent facts database, wake-word activation, screen vision, and dynamic persona overlays, EggMan delivers a desktop assistant experience that is private, highly reactive, and responsive.
+> EggMan is a premium, fully offline AI assistant that lives directly on your desktop. Combining real-time streaming, local vector storage, an advanced persistent memory system, wake-word activation, screen vision, and dynamic persona overlays, EggMan delivers a desktop assistant experience that is private, highly reactive, and responsive.
 
 ---
 
 ## 📖 Table of Contents
-1. [🚀 New Features in Version 0.5](#-new-features-in-version-05)
-2. [🎭 Persona System (v1)](#-persona-system-v1)
-3. [📊 Egg Inspector v2 (Diagnostics)](#-egg-inspector-v2-diagnostics)
-4. [⚡ Startup System v2 (Parallel boot)](#-startup-system-v2-parallel-boot)
-5. [🛠️ Core Architectural Workflow](#-core-architectural-workflow)
-6. [🎙️ Wake-Word & Voice Interface](#-wake-word--voice-interface)
-7. [📁 Repository Structure](#-repository-structure)
-8. [🧰 Technology Stack](#-technology-stack)
-9. [💻 Developer Quick Start](#-developer-quick-start)
-10. [📦 PyInstaller Bundling & Packaging](#-pyinstaller-bundling--packaging)
+1. [🚀 Core Modules in Version 0.6](#-core-modules-in-version-06)
+2. [🧠 Memory System v2](#-memory-system-v2)
+3. [🧩 Prompt Builder v2](#-prompt-builder-v2)
+4. [📊 Egg Inspector Diagnostics](#-egg-inspector-diagnostics)
+5. [🎭 Persona System (v1)](#-persona-system-v1)
+6. [⚡ Startup System v2](#-startup-system-v2)
+7. [🛠️ Architectural Workflow](#-architectural-workflow)
+8. [🎙️ Wake-Word & Voice Interface](#-wake-word--voice-interface)
+9. [📁 Repository Structure](#-repository-structure)
+10. [💻 Developer Quick Start](#-developer-quick-start)
+11. [📦 PyInstaller Bundling](#-pyinstaller-bundling)
 
 ---
 
-## 🚀 New Features in Version 0.5
+## 🚀 Core Modules in Version 0.6
 
 ### ⚡ Fluid Token Streaming & Micro-Animations
 - **Zero-Latency Rendering:** Tokens are written directly to the screen as soon as they are received from the local Ollama stream, bypassing all buffer lag.
@@ -36,11 +37,45 @@
 - **Smooth Popup Transition:** Cards cascade with a staggered 60ms slide-in spring animation from right-to-left.
 - **Click-to-Dismiss:** Closes automatically on select or when clicking outside.
 
+### 📦 Ollama Model Auto-Pulling
+- **Eager Background Pulling:** If `nomic-embed-text` is missing during startup or indexing, EggMan automatically triggers a background API pull from Ollama to download it on-demand without blocking GUI operations.
+
+---
+
+## 🧠 Memory System v2
+
+EggMan v0.6 features an intelligent long-term memory system that stores, classifies, retrieves, and maintains memories naturally:
+- **8 Memory Categories:** Auto-classifies user statements into `Preferences`, `Goals`, `Habits`, `Skills`, `Projects`, `Personal Facts`, `Temporary`, and `Permanent`.
+- **0-100 Importance Scoring:** Evaluates relevance using dynamic heuristics (explicitness, category weights, user keywords).
+- **Conflict Resolution:** Automatically detects overlapping preferences (e.g. changing IDEs, OS, languages) and deactivates/supersedes old records, preserving a historical chain.
+- **Lazy Expiration:** Automatically sweeps and deactivates temporary memories (e.g., "I'm travelling this week") after a 48-hour duration.
+- **Multi-Factor Ranking:** Sorts retrieval using relevance (40%), importance (30%), recency (15%), confidence (10%), and category boosts (5%).
+
+---
+
+## 🧩 Prompt Builder v2
+
+To avoid system prompt bloat and improve response speed, EggMan utilizes a registry-driven prompt builder:
+- **Modular LEGO Structure:** Dynamically selects only applicable prompt blocks (e.g., Vision rules are omitted unless an image is attached; Memory rules are omitted if no memories are retrieved).
+- **Static Caching:** Static modules (Core Identity, Communication Style) are cached at compile time.
+- **Qualifying Inferences:** Low-confidence inferences are prefixed with `(Possible)` inside the prompt so the LLM does not state them as absolute facts.
+
+---
+
+## 📊 Egg Inspector Diagnostics
+
+Accessible via the `/dev` slash command, Egg Inspector hosts multiple diagnostic dashboards:
+- **Performance tab:** Tracks latency, tokens/sec, response timeline stages, and request average comparison.
+- **Startup tab:** Benchmarks concurrent service boot times (DB init, warmups, audio pre-checks).
+- **Knowledge tab:** Details document status, vector counts, database size, search times, and similarity scores.
+- **Prompt tab:** Breaks down prompt composition, cache performance, per-module token counts, and reduction percentages.
+- **Memory tab:** Evaluates memory database sizes, average confidence, category distribution, and active/expired ratios.
+
 ---
 
 ## 🎭 Persona System (v1)
 
-EggMan now features a **Modular Persona System**. Switching your companion's identity dynamically alters its system prompt module (tone, humor, vocabulary, formatting constraints) and synchronizes its mascot avatar, keeping backend capabilities identical.
+EggMan's active persona dynamically alters its tone, vocabulary, formatting constraints, and synchronizes its mascot avatar, keeping backend capabilities identical.
 
 | Persona | Key | Emoji | Avatar | Vibe / Style |
 | :--- | :--- | :---: | :---: | :--- |
@@ -48,25 +83,11 @@ EggMan now features a **Modular Persona System**. Switching your companion's ide
 | **Coding Guy** | `coding` | 💻 | Senior Dev Avatar | Passionate engineer. Makes occasional dry programming jokes/analogies. |
 | **Party Boi** | `party` | 🍺 | Party Hat Avatar | Playful, chaotic, carefree. Stretches vowels (`helloooo`) and uses slang. |
 
-> [!NOTE]
-> Persona configurations are stored and persisted inside `eggman_settings.json` under `"active_persona"`.
-
 ---
 
-## 📊 Egg Inspector v2 (Diagnostics)
+## ⚡ Startup System v2
 
-Egg Inspector v2 is a premium, expandable developer analytics engine accessible via the `/dev` slash command.
-
-- **Real-Time Telemetry:** Tracks first-token latency, tokens/sec generation speed, total characters, keep-alive status, and active provider.
-- **Stacked Prompt Bar:** Displays system, user, and conversation history prompt tokens visually in a relative percentage stacked bar.
-- **Timeline Visualization:** Shows horizontal bars representing time spent in each stage (e.g. Memory retrieval, Prompt building, Ollama response).
-- **Interactive Request Comparison:** Compares current request statistics to your historical database averages with positive/negative color-coded delta indicators.
-
----
-
-## ⚡ Startup System v2 (Parallel Boot)
-
-To bypass model loading latency, the startup process initializes independent services concurrently:
+The startup process initializes independent services concurrently:
 
 ```mermaid
 graph TD
@@ -81,14 +102,9 @@ graph TD
     D --> E[Mascot State: READY]
 ```
 
-- **Background LLM Preheating:** Spawns a background thread immediately on boot to warm the active model in VRAM, eliminating first-message lag.
-- **Boot Profiling:** Logs timing metrics for each loading stage, accessible directly via the **Startup Diagnostics** tab in the Egg Inspector.
-
 ---
 
-## 🛠️ Core Architectural Workflow
-
-EggMan routes request handling through a clean Pipeline structure:
+## 🛠️ Architectural Workflow
 
 ```mermaid
 sequenceDiagram
@@ -96,16 +112,16 @@ sequenceDiagram
     actor User
     participant Main as main.py (UI)
     participant CE as ConversationEngine
-    participant PM as PersonaManager
+    participant PB as PromptBuilder v2
     participant AI as AIEngine
     participant OLL as Ollama Engine
 
-    User->>Main: Enter Message (Text or Speech)
+    User->>Main: Enter Message (Text/Speech)
     Main->>CE: stream_reply(user_message)
-    CE->>PM: get_active_persona_prompt()
-    PM-->>CE: Injected System Prompt
+    CE->>PB: build_system_prompt()
+    PB-->>CE: Dynamically Assembled System Prompt
     CE->>AI: generate(AIRequest)
-    AI->>OLL: Inference
+    AI->>OLL: Dynamic Inference
     OLL-->>Main: Real-time Chunks
     Main->>User: Animated Fade-In Rendering
 ```
@@ -114,9 +130,7 @@ sequenceDiagram
 
 ## 🎙️ Wake-Word & Voice Interface
 
-EggMan listens continuously in the background using dual-engine audio drivers:
-
-- **Wake-Word Engine:** Uses `openWakeWord` configured with an `"Alexa"` acoustic footprint. When detected, EggMan wakes up without noisy beeps.
+- **Wake-Word Engine:** Uses `openWakeWord` configured with an `"Alexa"` acoustic footprint.
 - **Speech-to-Text (STT):** Powered by `faster-whisper` using CPU `int8` quantization for responsive local voice transcription.
 - **Speech Bubble Indicator:** Shows an Instagram-style bouncing three-dots typing animation over the companion during processing.
 
@@ -135,16 +149,17 @@ Eggman/
 │   ├── embeddings/       # Vector storage & chromadb integrations
 │   ├── emotion/          # Emotion mapping engines
 │   ├── knowledge/        # PDF loaders & document management
-│   ├── memory/           # Persistent fact extractors
+│   ├── memory/           # Classifiers, scorers, conflict resolvers (v2)
 │   ├── personas/         # Persona subclasses & PersonaManager (v1)
 │   ├── profiler/         # Diagnostics & Telemetry (v2)
+│   ├── prompt/           # Modular PromptBuilder, registries, caches (v2)
 │   ├── startup/          # StartupService & profile logger (v2)
 │   ├── tools/            # Native OS execution tools (Calc, Clipboard)
 │   ├── vision/           # Screen captures and VisionManager
 │   └── voice/            # Speech-to-text & openWakeWord services
 ├── core/                 # Configurations, slash command routing, and themes
 ├── ui/                   # PySide6 widgets, custom Dialogs, and Switchers
-├── tests/                # Comprehensive pytest suites (50+ unit tests)
+├── tests/                # Pytest suites (60+ unit tests)
 ├── main.py               # Application entry point
 ├── EggMan.spec           # PyInstaller spec file
 └── requirements.txt      # Main project dependencies
@@ -152,23 +167,9 @@ Eggman/
 
 ---
 
-## 🧰 Technology Stack
-
-- **Language:** Python 3.11
-- **UI Framework:** PySide6 (Qt for Python)
-- **Local Inference Engine:** Ollama (`qwen3:8b` for text, `qwen2.5vl:7b` for screen screenshots)
-- **Transcription Pipeline:** `faster-whisper`
-- **Wake Word Detection:** `openWakeWord`
-- **Fact Storage:** SQLite
-- **Test Framework:** Pytest
-- **Compiler:** PyInstaller
-
----
-
 ## 💻 Developer Quick Start
 
 ### 1. Set Up Environment
-Ensure you have Python 3.11 installed, then run:
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -180,6 +181,7 @@ Ensure Ollama is running locally, then fetch the required models:
 ```bash
 ollama pull qwen3:8b
 ollama pull qwen2.5vl:7b
+ollama pull nomic-embed-text
 ```
 
 ### 3. Launch Application
@@ -188,14 +190,13 @@ python main.py
 ```
 
 ### 4. Run Tests
-Validate the application status using our testing suite:
 ```bash
 pytest
 ```
 
 ---
 
-## 📦 PyInstaller Bundling & Packaging
+## 📦 PyInstaller Bundling
 
 To compile a standalone, zero-dependency executable distribution of EggMan, run:
 

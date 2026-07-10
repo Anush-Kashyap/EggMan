@@ -69,4 +69,26 @@ def initialize_schema(connection: sqlite3.Connection) -> None:
         connection.execute("ALTER TABLE kb_documents ADD COLUMN chunk_count INTEGER NOT NULL DEFAULT 0")
     except Exception:
         pass
+
+    # Migration: add new memory columns if missing
+    for col, definition in [
+        ("source", "TEXT NOT NULL DEFAULT 'explicit'"),
+        ("expires_at", "TEXT"),
+        ("supersedes", "INTEGER"),
+        ("embedding_id", "TEXT"),
+        ("active", "INTEGER NOT NULL DEFAULT 1"),
+    ]:
+        try:
+            connection.execute(f"ALTER TABLE memories ADD COLUMN {col} {definition}")
+        except Exception:
+            pass
+
+    # Migrate importance text values to integers (20, 50, 80)
+    try:
+        connection.execute("UPDATE memories SET importance = '20' WHERE importance = 'low'")
+        connection.execute("UPDATE memories SET importance = '50' WHERE importance = 'medium'")
+        connection.execute("UPDATE memories SET importance = '80' WHERE importance = 'high'")
+    except Exception:
+        pass
+
     connection.commit()

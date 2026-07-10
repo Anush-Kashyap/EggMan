@@ -179,6 +179,8 @@ class SQLiteVectorStore(VectorStore):
             if vec_data is None:
                 continue
             stored_vec = np.frombuffer(vec_data, dtype=np.float32)
+            if stored_vec.shape[0] != query_vec.shape[0]:
+                continue  # skip mismatched dimensions from model change
             stored_norm = np.linalg.norm(stored_vec)
             if stored_norm == 0:
                 continue

@@ -6,21 +6,29 @@ from core.conversation import ConversationEngine
 
 
 def test_prompt_builder_assembling():
-    """Verify that PromptBuilder correctly structures prompts, appends voice rules, and handles intent/length constraints."""
-    pb = PromptBuilder()
+    """Verify that PromptBuilder correctly structures prompts, appends voice rules, and handles intent/length constraints dynamically."""
+    from unittest.mock import MagicMock
     
-    # 1. Casual mode system prompt with a direct greeting to trigger the constraint
+    # 1. Casual mode system prompt with a direct greeting (no memory or knowledge)
+    pb = PromptBuilder()
     prompt_casual = pb.build_system_prompt(mode="casual", is_voice=False, user_message="hello")
     assert "IDENTITY" in prompt_casual
     assert "PERSONALITY" in prompt_casual
     assert "COMMUNICATION STYLE" in prompt_casual
     assert "CONVERSATION RULES" in prompt_casual
-    assert "MEMORY RULES" in prompt_casual
+    assert "MEMORY RULES" not in prompt_casual  # Dynamic omission in v2
     assert "RESPONSE LENGTH CONSTRAINT" in prompt_casual
     assert "CONVERSATION MODE: CASUAL" in prompt_casual
     assert "VOICE" not in prompt_casual  # Not voice mode
     
-    # 2. Programming mode + voice mode prompt
+    # 2. Case with memories retrieved
+    mock_retrieval = MagicMock()
+    mock_retrieval.retrieve.return_value = [MagicMock()]
+    pb_mem = PromptBuilder(retrieval_service=mock_retrieval)
+    prompt_with_mem = pb_mem.build_system_prompt(mode="casual", is_voice=False, user_message="query with memories")
+    assert "MEMORY RULES" in prompt_with_mem
+    
+    # 3. Programming mode + voice mode prompt
     prompt_prog_voice = pb.build_system_prompt(mode="programming", is_voice=True, user_message="Fix this code error please")
     assert "CONVERSATION MODE: PROGRAMMING" in prompt_prog_voice
     assert "VOICE CONVERSATION RULES" in prompt_prog_voice

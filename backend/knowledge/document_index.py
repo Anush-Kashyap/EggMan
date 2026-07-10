@@ -58,7 +58,7 @@ class DocumentIndex:
         self._progress_callbacks: List[ProgressCallback] = []
 
     def on_progress(self, callback: ProgressCallback) -> None:
-        self._progress_callbacks.append(callback)
+        self._progress_callbacks = [callback]
 
     def _notify_progress(self, doc_id: int, status: str) -> None:
         for cb in self._progress_callbacks:

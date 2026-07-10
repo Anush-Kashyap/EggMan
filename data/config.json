@@ -8,5 +8,6 @@
   "voice_whisper_model": "base",
   "wake_word_enabled": true,
   "wake_word_name": "alexa",
-  "wake_word_threshold": 0.5
+  "wake_word_threshold": 0.5,
+  "embedding_model": "nomic-embed-text"
 }

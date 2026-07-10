@@ -4,7 +4,7 @@ import logging
 from time import perf_counter
 from backend.ai.ai_engine import AIEngine
 from backend.ai.models import AIRequest, MessageEntry
-from backend.ai.prompt_builder import PromptBuilder
+from backend.prompt.prompt_builder import PromptBuilder
 from backend.ai.streaming import StreamingResponse
 from core.providers import LocalProvider
 
@@ -12,10 +12,10 @@ logger = logging.getLogger("eggman")
 
 
 class ConversationEngine:
-    def __init__(self, ai_engine: AIEngine | None = None):
+    def __init__(self, ai_engine: AIEngine | None = None, prompt_builder: PromptBuilder | None = None):
         self._ai_engine = ai_engine
         self._fallback_provider = LocalProvider()
-        self._prompt_builder = PromptBuilder()
+        self._prompt_builder = prompt_builder or PromptBuilder()
 
     def get_reply(
         self,

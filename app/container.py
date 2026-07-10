@@ -23,7 +23,14 @@ from backend.memory.memory_extractor import MemoryExtractor
 from backend.memory.memory_manager import MemoryManager
 from backend.memory.memory_repository import MemoryRepository
 from backend.memory.memory_service import MemoryService
+from backend.memory.memory_classifier import MemoryClassifier
+from backend.memory.memory_importance import ImportanceScorer
+from backend.memory.memory_conflict_resolver import ConflictResolver
+from backend.memory.memory_expiration import ExpirationManager
+from backend.memory.memory_ranker import MemoryRanker
+from backend.memory.memory_retriever import MemoryRetriever
 from backend.retrieval.retrieval_service import RetrievalService
+from backend.prompt.prompt_builder import PromptBuilder
 from backend.voice.speech_to_text import SpeechToTextService
 from backend.voice.voice_manager import VoiceManager
 from backend.tools.registry import ToolRegistry
@@ -89,6 +96,12 @@ class AppContainer:
             base_url=ollama_base,
             model=embedding_model,
         )
+        # Pull embedding model in background so app launches immediately
+        import threading
+        threading.Thread(
+            target=self.ollama_embedding_provider.ensure_model_available,
+            daemon=True,
+        ).start()
         self.embedding_service = EmbeddingService(provider=self.ollama_embedding_provider)
         self.retriever = Retriever(
             vector_store=self.vector_store,
@@ -111,10 +124,31 @@ class AppContainer:
 
         self.memory_repository = MemoryRepository(self.database_manager)
         self.memory_extractor = MemoryExtractor()
-        self.memory_manager = MemoryManager(repository=self.memory_repository, extractor=self.memory_extractor)
+        self.memory_classifier = MemoryClassifier()
+        self.importance_scorer = ImportanceScorer()
+        self.conflict_resolver = ConflictResolver(self.memory_repository)
+        self.expiration_manager = ExpirationManager(self.memory_repository)
+        self.memory_ranker = MemoryRanker()
+        self.memory_retriever = MemoryRetriever(
+            self.memory_repository,
+            self.memory_ranker,
+            self.expiration_manager,
+        )
+        self.memory_manager = MemoryManager(
+            repository=self.memory_repository,
+            extractor=self.memory_extractor,
+            classifier=self.memory_classifier,
+            importance_scorer=self.importance_scorer,
+            conflict_resolver=self.conflict_resolver,
+            retriever=self.memory_retriever,
+        )
         self.memory_service = MemoryService(memory_manager=self.memory_manager)
         self.retrieval_service = RetrievalService(memory_manager=self.memory_manager)
         self.context_builder = ContextBuilder(retrieval_service=self.retrieval_service, knowledge_manager=self.knowledge_manager)
+        self.prompt_builder = PromptBuilder(
+            retrieval_service=self.retrieval_service,
+            knowledge_manager=self.knowledge_manager,
+        )
         self.prompt_pipeline = PromptPipeline()
         self.streaming_pipeline = StreamingPipeline()
         self.tool_registry = ToolRegistry()
@@ -154,7 +188,7 @@ class AppContainer:
             tool_router=self.tool_router,
             logger=self.logger._logger,
         )
-        self.conversation_engine = ConversationEngine(ai_engine=self.ai_engine)
+        self.conversation_engine = ConversationEngine(ai_engine=self.ai_engine, prompt_builder=self.prompt_builder)
 
         self.speech_to_text = SpeechToTextService(
             model_size=str(self.config_manager.get("voice_whisper_model")),

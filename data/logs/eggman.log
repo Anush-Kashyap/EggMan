@@ -21064,3 +21064,153 @@ ValueError: Unknown application: capcut. Registered applications: chrome, notepa
 2026-07-09 16:57:05,848 | INFO | KBRepository: record added id=4 filename=tmptr_6sze2.txt status=waiting
 2026-07-09 16:57:05,848 | INFO | KM: document metadata saved id=4 filename=tmptr_6sze2.txt
 2026-07-09 16:57:05,849 | INFO | KM: background indexing thread started for doc_id=4
+2026-07-09 17:16:00,650 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 17:16:00,672 | INFO | Task Scheduler started
+2026-07-09 17:16:00,673 | INFO | Schedule loaded: count=0
+2026-07-09 17:16:00,678 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 17:16:00,680 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 17:16:02,674 | INFO | Schedule loaded: count=0
+2026-07-09 17:16:02,773 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 17:16:02,773 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 17:16:04,676 | INFO | Schedule loaded: count=0
+2026-07-09 17:16:04,805 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 17:16:04,805 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2031.6
+2026-07-09 17:16:04,805 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2031.7
+2026-07-09 17:16:04,805 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 17:16:04,805 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 17:16:04,811 | INFO | SessionContext: session created
+2026-07-09 17:16:04,811 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 17:16:04,850 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 17:16:04,850 | INFO | Application services initialized
+2026-07-09 17:20:11,410 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-09 17:20:11,423 | INFO | Task Scheduler started
+2026-07-09 17:20:11,424 | INFO | Schedule loaded: count=0
+2026-07-09 17:20:11,431 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-09 17:20:11,433 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-09 17:20:13,425 | INFO | Schedule loaded: count=0
+2026-07-09 17:20:13,534 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 17:20:13,534 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-09 17:20:15,428 | INFO | Schedule loaded: count=0
+2026-07-09 17:20:15,562 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-09 17:20:15,562 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2028.0
+2026-07-09 17:20:15,562 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2028.0
+2026-07-09 17:20:15,562 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-09 17:20:15,562 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-09 17:20:15,568 | INFO | SessionContext: session created
+2026-07-09 17:20:15,568 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-09 17:20:15,583 | INFO | VisionManager: Registered image source: screenshot
+2026-07-09 17:20:15,583 | INFO | Application services initialized
+2026-07-10 09:41:21,762 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-10 09:41:21,822 | INFO | Task Scheduler started
+2026-07-10 09:41:21,827 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:21,831 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-10 09:41:21,836 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-10 09:41:23,830 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:23,911 | INFO | Embedding model 'nomic-embed-text' is already available
+2026-07-10 09:41:25,834 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:25,956 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:41:25,957 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:41:27,837 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:27,994 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:41:27,994 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2038.0
+2026-07-10 09:41:27,994 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2038.1
+2026-07-10 09:41:27,994 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-10 09:41:27,994 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-10 09:41:28,002 | INFO | SessionContext: session created
+2026-07-10 09:41:28,002 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-10 09:41:28,020 | INFO | VisionManager: Registered image source: screenshot
+2026-07-10 09:41:28,020 | INFO | Application services initialized
+2026-07-10 09:41:28,027 | INFO | Application startup
+2026-07-10 09:41:28,042 | DEBUG | PersonaManager: registered persona key=normal name=Normal
+2026-07-10 09:41:28,042 | DEBUG | PersonaManager: registered persona key=coding name=Coding Guy
+2026-07-10 09:41:28,042 | DEBUG | PersonaManager: registered persona key=party name=Party Boi
+2026-07-10 09:41:28,042 | INFO | PersonaManager: Persona Changed — old=normal new=normal display=Normal
+2026-07-10 09:41:29,036 | INFO | [STARTUP] Startup sequence started
+2026-07-10 09:41:29,036 | INFO | [STARTUP] SessionContext initialized developer_mode=False
+2026-07-10 09:41:29,037 | INFO | [STARTUP] Scheduler initialized
+2026-07-10 09:41:29,037 | INFO | [STARTUP] Voice subsystem ready
+2026-07-10 09:41:29,038 | INFO | [STARTUP] Configuration verified
+2026-07-10 09:41:29,097 | INFO | Desktop companion initialized and shown on startup
+2026-07-10 09:41:29,841 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:31,067 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:41:31,068 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:41:31,844 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:33,095 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:41:33,095 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2027.6
+2026-07-10 09:41:33,095 | INFO | [STARTUP] Ollama connected model=qwen3:8b elapsed_ms=2027.7
+2026-07-10 09:41:33,095 | INFO | [STARTUP] Model warm-up started
+2026-07-10 09:41:33,849 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:35,138 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:41:35,138 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:41:35,138 | INFO | Ollama generate request model=qwen3:8b message_len=5
+2026-07-10 09:41:35,853 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:37,857 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:39,863 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:41,867 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:43,872 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:45,877 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:47,882 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:49,885 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:51,890 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:53,893 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:55,897 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:57,903 | INFO | Schedule loaded: count=0
+2026-07-10 09:41:59,907 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:01,911 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:03,914 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:05,919 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:05,954 | INFO | PersonaManager: Persona Changed — old=normal new=coding display=Coding Guy
+2026-07-10 09:42:05,962 | INFO | ChatWindow: Persona switched old=normal new=coding
+2026-07-10 09:42:07,923 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:09,926 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:11,933 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:13,939 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:14,546 | DEBUG | VoiceManager state=idle
+2026-07-10 09:42:15,941 | INFO | Task Scheduler stopped
+2026-07-10 09:42:15,941 | INFO | ChatWindow shutdown
+2026-07-10 09:42:18,269 | INFO | Application paths initialized frozen=False app_root=C:\Users\anush\OneDrive\Desktop\Eggman resource_root=C:\Users\anush\OneDrive\Desktop\Eggman user_data_root=C:\Users\anush\OneDrive\Desktop\Eggman
+2026-07-10 09:42:18,324 | INFO | Task Scheduler started
+2026-07-10 09:42:18,331 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:18,341 | INFO | DocumentManager: registered loader PDFLoader for extension .pdf
+2026-07-10 09:42:18,344 | INFO | OllamaEmbeddingProvider initialized base_url=http://localhost:11434 model=nomic-embed-text
+2026-07-10 09:42:20,338 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:20,459 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:42:20,459 | INFO | Embedding model 'nomic-embed-text' is already available
+2026-07-10 09:42:20,459 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:42:22,345 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:22,521 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:42:22,521 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2061.1
+2026-07-10 09:42:22,521 | INFO | Ollama startup check passed model=qwen3:8b elapsed_ms=2061.4
+2026-07-10 09:42:22,521 | INFO | Provider registry initialized active=ollama available=['local', 'ollama'] ollama_ok=True
+2026-07-10 09:42:22,521 | INFO | SpeechToTextService configured model=base device=cpu compute_type=int8
+2026-07-10 09:42:22,529 | INFO | SessionContext: session created
+2026-07-10 09:42:22,530 | INFO | VoiceManager initialized sample_rate=16000
+2026-07-10 09:42:22,545 | INFO | VisionManager: Registered image source: screenshot
+2026-07-10 09:42:22,545 | INFO | Application services initialized
+2026-07-10 09:42:22,549 | INFO | Application startup
+2026-07-10 09:42:22,575 | DEBUG | PersonaManager: registered persona key=normal name=Normal
+2026-07-10 09:42:22,575 | DEBUG | PersonaManager: registered persona key=coding name=Coding Guy
+2026-07-10 09:42:22,575 | DEBUG | PersonaManager: registered persona key=party name=Party Boi
+2026-07-10 09:42:22,575 | INFO | PersonaManager: Persona Changed — old=normal new=coding display=Coding Guy
+2026-07-10 09:42:25,672 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:25,740 | INFO | [STARTUP] Startup sequence started
+2026-07-10 09:42:25,741 | INFO | [STARTUP] SessionContext initialized developer_mode=False
+2026-07-10 09:42:25,745 | INFO | [STARTUP] Scheduler initialized
+2026-07-10 09:42:25,746 | INFO | [STARTUP] Voice subsystem ready
+2026-07-10 09:42:25,758 | INFO | [STARTUP] Configuration verified
+2026-07-10 09:42:25,821 | INFO | Desktop companion initialized and shown on startup
+2026-07-10 09:42:27,684 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:27,821 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:42:27,821 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:42:29,695 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:29,862 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:42:29,862 | INFO | Ollama test_connection ok base_url=http://localhost:11434 model=qwen3:8b elapsed_ms=2041.2
+2026-07-10 09:42:29,862 | INFO | [STARTUP] Ollama connected model=qwen3:8b elapsed_ms=2041.3
+2026-07-10 09:42:29,862 | INFO | [STARTUP] Model warm-up started
+2026-07-10 09:42:31,704 | INFO | Schedule loaded: count=0
+2026-07-10 09:42:31,897 | INFO | Ollama model selected=qwen3:8b (default)
+2026-07-10 09:42:31,897 | INFO | OllamaProvider initialized base_url=http://localhost:11434 model=qwen3:8b configured_model=qwen3:8b
+2026-07-10 09:42:31,897 | INFO | Ollama generate request model=qwen3:8b message_len=5
+2026-07-10 09:42:32,800 | DEBUG | VoiceManager state=idle
+2026-07-10 09:42:33,708 | INFO | Task Scheduler stopped
+2026-07-10 09:42:33,708 | INFO | ChatWindow shutdown

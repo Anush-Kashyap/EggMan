@@ -34,6 +34,7 @@ class DatabaseManager:
     def get_connection(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self._database_path)
         connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA journal_mode=WAL")
         return connection
 
     def close(self) -> None:
