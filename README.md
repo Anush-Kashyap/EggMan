@@ -16,14 +16,9 @@
 3. [🧩 Prompt Builder v2](#-prompt-builder-v2)
 4. [⚡ Event Bus Infrastructure](#-event-bus-infrastructure)
 5. [🗃️ Capability & Tool Registry V2](#-capability--tool-registry-v2)
-6. [📊 Egg Inspector Diagnostics](#-egg-inspector-diagnostics)
-7. [🎭 Persona System (v1)](#-persona-system-v1)
-8. [⚡ Startup System v2](#-startup-system-v2)
-9. [🛠️ Architectural Workflow](#-architectural-workflow)
-10. [🎙️ Wake-Word & Voice Interface](#-wake-word--voice-interface)
-11. [📁 Repository Structure](#-repository-structure)
-12. [💻 Developer Quick Start](#-developer-quick-start)
-13. [📦 PyInstaller Bundling](#-pyinstaller-bundling)
+6. [📁 Repository Structure](#-repository-structure)
+7. [💻 Developer Quick Start](#-developer-quick-start)
+8. [📦 PyInstaller Bundling](#-pyinstaller-bundling)
 
 ---
 
