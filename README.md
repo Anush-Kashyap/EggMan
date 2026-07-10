@@ -24,17 +24,38 @@
 
 ## 🚀 Core Modules in Version 0.7
 
-### ⚡ Fluid Token Streaming & Micro-Animations (Present)
-### 🎭 Floating Persona Selector (Present)
-### 📦 Ollama Model Auto-Pulling (Present)
+### ⚡ Fluid Token Streaming & Micro-Animations
+- **Zero-Latency Rendering:** Tokens are written directly to the screen as soon as they are received from the local Ollama stream, bypassing all buffer lag.
+- **Micro-Animations:** Custom-rendered words feature a smooth, lightweight fade-in combined with a vertical slide glide (150ms) to enhance readability.
+- **Smart Sizing Policies:** Message bubbles scale up to **72% of the active window width** for paragraphs and technical code, while shrinking to fit short one-liners.
+
+### 🎭 Floating Persona Selector
+- **Title Bar Integration:** Triggered via a `🎭` icon on the right side of the Title Bar.
+- **Smooth Popup Transition:** Cards cascade with a staggered 60ms slide-in spring animation from right-to-left.
+- **Click-to-Dismiss:** Closes automatically on select or when clicking outside.
+
+### 📦 Ollama Model Auto-Pulling
+- **Eager Background Pulling:** If `nomic-embed-text` is missing during startup or indexing, EggMan automatically triggers a background API pull from Ollama to download it on-demand without blocking GUI operations.
 
 ---
 
-## 🧠 Memory System v2 (Present)
+## 🧠 Memory System v2
+
+EggMan v0.6 features an intelligent long-term memory system that stores, classifies, retrieves, and maintains memories naturally:
+- **8 Memory Categories:** Auto-classifies user statements into `Preferences`, `Goals`, `Habits`, `Skills`, `Projects`, `Personal Facts`, `Temporary`, and `Permanent`.
+- **0-100 Importance Scoring:** Evaluates relevance using dynamic heuristics (explicitness, category weights, user keywords).
+- **Conflict Resolution:** Automatically detects overlapping preferences (e.g. changing IDEs, OS, languages) and deactivates/supersedes old records, preserving a historical chain.
+- **Lazy Expiration:** Automatically sweeps and deactivates temporary memories (e.g., "I'm travelling this week") after a 48-hour duration.
+- **Multi-Factor Ranking:** Sorts retrieval using relevance (40%), importance (30%), recency (15%), confidence (10%), and category boosts (5%).
 
 ---
 
-## 🧩 Prompt Builder v2 (Present)
+## 🧩 Prompt Builder v2
+
+To avoid system prompt bloat and improve response speed, EggMan utilizes a registry-driven prompt builder:
+- **Modular LEGO Structure:** Dynamically selects only applicable prompt blocks (e.g., Vision rules are omitted unless an image is attached; Memory rules are omitted if no memories are retrieved).
+- **Static Caching:** Static modules (Core Identity, Communication Style) are cached at compile time.
+- **Qualifying Inferences:** Low-confidence inferences are prefixed with `(Possible)` inside the prompt so the LLM does not state them as absolute facts.
 
 ---
 
@@ -59,15 +80,45 @@ EggMan v0.7 implements a highly extensible **Registry Subsystem** designed to el
 
 ---
 
-## 📊 Egg Inspector Diagnostics (Present)
+## 📊 Egg Inspector Diagnostics
+
+Accessible via the `/dev` slash command, Egg Inspector hosts multiple diagnostic dashboards:
+- **Performance tab:** Tracks latency, tokens/sec, response timeline stages, and request average comparison.
+- **Startup tab:** Benchmarks concurrent service boot times (DB init, warmups, audio pre-checks).
+- **Knowledge tab:** Details document status, vector counts, database size, search times, and similarity scores.
+- **Prompt tab:** Breaks down prompt composition, cache performance, per-module token counts, and reduction percentages.
+- **Memory tab:** Evaluates memory database sizes, average confidence, category distribution, and active/expired ratios.
 
 ---
 
-## 🎭 Persona System (v1) (Present)
+## 🎭 Persona System (v1)
+
+EggMan's active persona dynamically alters its tone, vocabulary, formatting constraints, and synchronizes its mascot avatar, keeping backend capabilities identical.
+
+| Persona | Key | Emoji | Avatar | Vibe / Style |
+| :--- | :--- | :---: | :---: | :--- |
+| **Normal** | `normal` | 🥚 | Classic Mascot | Calm, practical, Curiously honest. Uses classic `thinking.png` state. |
+| **Coding Guy** | `coding` | 💻 | Senior Dev Avatar | Passionate engineer. Makes occasional dry programming jokes/analogies. |
+| **Party Boi** | `party` | 🍺 | Party Hat Avatar | Playful, chaotic, carefree. Stretches vowels (`helloooo`) and uses slang. |
 
 ---
 
-## ⚡ Startup System v2 (Present)
+## ⚡ Startup System v2
+
+The startup process initializes independent services concurrently:
+
+```mermaid
+graph TD
+    A[Launch App] --> B{Concurrent Phase 1}
+    B --> B1[SessionContext Init]
+    B --> B2[Scheduler Init]
+    B --> B3[Voice Pre-Verification]
+    B --> B4[Configuration Loader]
+    B --> B5[Ollama Handshake]
+    B1 & B2 & B3 & B4 & B5 --> C[Phase 2: Model Warm-up]
+    C --> D[Phase 3: Reminder Audit]
+    D --> E[Mascot State: READY]
+```
 
 ---
 
